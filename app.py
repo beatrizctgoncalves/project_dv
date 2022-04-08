@@ -8,13 +8,6 @@ import pandas as pd
 import plotly.graph_objs as go
 
 
-# https://htmlcheatsheet.com/css/
-
-######################################################Data##############################################################
-# Dataset Vacinas
-#df_vacinas = pd.read_csv('country_vaccinations.csv')
-
-
 
 ######################################################Interactive Components############################################
 
@@ -40,16 +33,22 @@ app.title = 'Covid-19'
 ######################################################NavBar##############################################################
 # To connect to app pages
 import home
+import deaths
+import variants
+import vacination
 
-COVID_LOGO = "https://www.pat.nhs.uk/Coronavirus/images/Covid%2019%20Icon.png"
+nav_home = dbc.NavItem(dbc.NavLink("Home", href="/home", active="exact"))
+nav_deaths = dbc.NavItem(dbc.NavLink("Deaths", href="/deaths", active="exact"))
+nav_variants = dbc.NavItem(dbc.NavLink("Variants", href="/variants", active="exact"))
+nav_vacination = dbc.NavItem(dbc.NavLink("Vacination", href="/vacination", active="exact"))
 
-nav_item_home = dbc.NavItem(dbc.NavLink("Home", href="/home", active="exact"))
 
-CONTENT_STYLE = {
-    "margin-left": "18rem",
-    "margin-right": "2rem",
-    "padding": "2rem 1rem",
+colors = {
+    'background': '#F6F5F3',
+    'nav': '#283044'
 }
+
+COVID_LOGO = "assets/favicon.ico"
 
 logo = dbc.Navbar(
     dbc.Container(
@@ -57,24 +56,23 @@ logo = dbc.Navbar(
             html.A(
                 dbc.Row(
                     [
-                        dbc.Col(html.Img(src=COVID_LOGO, height="30px", className="ml-2")),
+                        dbc.Col(html.Img(src=COVID_LOGO, height="80px", className="ml-2")),
                     ],
-                    align="center",
-                    no_gutters=True,
+                    align="center"
                 ),
-                href="/home",
+                href="/",
             ),
             dbc.NavbarToggler(id="navbar-toggler2"),
             dbc.Collapse(
                 dbc.Nav(
-                    [nav_item_home], className="ml-auto", navbar=True
+                    [nav_home, nav_deaths, nav_variants, nav_vacination], className="ml-auto", navbar=True
                 ),
                 id="navbar-collapse2",
-                navbar=True,
+                navbar=True
             ),
         ], fluid=True
     ),
-    color="#CACF85",
+    color=colors["nav"],
     dark=True,
     className="mb-3",
 )
@@ -83,18 +81,24 @@ logo = dbc.Navbar(
 content = html.Div(id="page-content")
 
 app.layout = html.Div(
-    [dcc.Location(id="url"), logo, content]
+    [dcc.Location(id="url"), logo, content], style={'backgroundColor': colors['background']}
 )
 
 @app.callback(Output("page-content", "children"), [Input("url", "pathname")])
 def render(pathname):
     if pathname == "/" or pathname == "/home":
         return home.layout
+    elif pathname == "/deaths":
+        return deaths.layout
+    elif pathname == "/variants":
+        return variants.layout
+    elif pathname == "/vacination":
+        return vacination.layout
     return dbc.Jumbotron(
         [
             html.H1("Error 404: Page not found", className="text-danger"),
             html.Hr(),
-            html.P(f"The page {pathname} was not fount...")
+            html.P("The page " + pathname + " was not fount...")
         ]
     )
 
