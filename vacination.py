@@ -4,30 +4,31 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 import plotly.graph_objects as go
 import pandas as pd
+import plotly.express as px
+import numpy as np
 
 # Connect to main app.py file
 from app import app, server
 
 
 # Datasets
-#df_vacination = pd.read_csv('country_vaccinations.csv')
+df_vacinas = pd.read_csv('datasets/country_vaccinations.csv')
 df_variants = pd.read_csv('datasets/data.csv')
 df_global_daily = pd.read_csv('datasets/worldometer_coronavirus_daily_data.csv')
 df_global_summary = pd.read_csv('datasets/worldometer_coronavirus_summary_data.csv')
 
 
-def choropleth():
-    fig = go.Figure(data=go.Choropleth(
-        locations=df_global_summary['country'], # Spatial coordinates
-        z = df_global_summary['total_confirmed'].astype(float), # Data to be color-coded
-        locationmode = 'country names', # set of locations match entries in `locations`
-        colorscale = 'Reds',
-        colorbar_title = "Total Cases",
-    ))
-    fig.update_layout(
-        geo_scope='world', # limite map scope to USA
-    )
-    return fig
+df_vacinas=df_vacinas.drop(columns=['source_name','source_website'])
+df_vacinas=df_vacinas.dropna()
+
+df_Portugal = df_vacinas.loc[df_vacinas["country"] == 'Portugal']
+df_Portugal.tail()
+
+
+def scatter_geo():
+    figVacines1 = px.scatter_geo(df_vacinas, locations='iso_code', hover_name='country', color=df_vacinas["daily_vaccinations"], 
+                size=df_vacinas["daily_vaccinations"],animation_frame="date", projection="natural earth", title = 'Daily Vaccinations')
+    return figVacines1
 
 
 colors = {
@@ -67,7 +68,7 @@ layout = dbc.Container([
             dbc.Row([
                 dbc.Col([
                     dbc.Card(
-                        dcc.Graph(figure=choropleth()), body=True, color=colors["nav"]
+                        dcc.Graph(figure=scatter_geo()), body=True, color=colors["nav"]
                     )
                 ], width=12)
             ]),

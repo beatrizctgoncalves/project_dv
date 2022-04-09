@@ -4,29 +4,35 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 import plotly.graph_objects as go
 import pandas as pd
+import plotly.express as px
+import numpy as np
 
 # Connect to main app.py file
 from app import app, server
 
 
 # Datasets
-#df_vacinas = pd.read_csv('country_vaccinations.csv')
+df_vacinas = pd.read_csv('datasets/country_vaccinations.csv')
 df_variantes = pd.read_csv('datasets/data.csv')
 df_global_daily = pd.read_csv('datasets/worldometer_coronavirus_daily_data.csv')
 df_global_summary = pd.read_csv('datasets/worldometer_coronavirus_summary_data.csv')
 
 
-def choropleth():
+def choropleth_deaths():
     fig = go.Figure(data=go.Choropleth(
         locations=df_global_summary['country'], # Spatial coordinates
-        z = df_global_summary['total_confirmed'].astype(float), # Data to be color-coded
+        z = df_global_summary['total_deaths'].astype(float), # Data to be color-coded
         locationmode = 'country names', # set of locations match entries in `locations`
         colorscale = 'Reds',
-        colorbar_title = "Total Cases",
+        colorbar_title = "Total Deaths",
     ))
+
     fig.update_layout(
+        title_text = 'Total deaths by country',
         geo_scope='world', # limite map scope to USA
     )
+
+    #fig.show()
     return fig
 
 
@@ -61,13 +67,13 @@ layout = dbc.Container([
             ]),
             dbc.Row([
                 dbc.Col([
-                    html.H3('Covid-19 Cases in the World ', style={'textAlign': 'center', 'color': colors["text"]})
+                    html.H3('Total COVID-19 Deaths by Country', style={'textAlign': 'center', 'color': colors["text"]})
                 ], width=12),
             ]),
             dbc.Row([
                 dbc.Col([
                     dbc.Card(
-                        dcc.Graph(figure=choropleth()), body=True, color=colors["nav"]
+                        dcc.Graph(figure=choropleth_deaths()), body=True, color=colors["nav"]
                     )
                 ], width=12)
             ]),

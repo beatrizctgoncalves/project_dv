@@ -4,30 +4,57 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 import plotly.graph_objects as go
 import pandas as pd
+import plotly.express as px
+import numpy as np
 
 # Connect to main app.py file
 from app import app, server
 
 
 # Datasets
-#df_vacinas = pd.read_csv('country_vaccinations.csv')
+df_vacinas = pd.read_csv('datasets/country_vaccinations.csv')
 df_variantes = pd.read_csv('datasets/data.csv')
 df_global_daily = pd.read_csv('datasets/worldometer_coronavirus_daily_data.csv')
 df_global_summary = pd.read_csv('datasets/worldometer_coronavirus_summary_data.csv')
 
 
+df_variantes= df_variantes.drop(columns=['source','number_sequenced','percent_cases_sequenced', 'valid_denominator',
+       'number_sequenced_known_variant'])
+df_variantes = df_variantes.astype({"variant": str}, errors='raise') 
+
+Variant_Codes=['B.1.617.2','B.1.1.7','B.1.351','B.1.1.529','P.1','B.1.1.7+E484K','UNK','B.1.525','B.1.617.1','B.1.621','B.1.616',
+               'C.37','B.1.620','B.1.617.3','B.1.427/B.1.429','P.3','AT.1','C.1.2','B.1.640','B.1.526','SGTF']
+Variant_Name=['Delta','Alpha','Beta','Omicron','Gama','Alpha W/Mutations','Unknown','Eta','Kappa','Mu','Nameless_1','Lambda','Nameless_2',
+              'Nameless_3','Epsilon','Nameless_4','Theta','Nameless_5','IHV','Iota','Nameless_6']    
+
+df_variantes['variant']=df_variantes['variant'].replace(Variant_Codes, Variant_Name)           
+
 def choropleth():
-    fig = go.Figure(data=go.Choropleth(
-        locations=df_global_summary['country'], # Spatial coordinates
-        z = df_global_summary['total_confirmed'].astype(float), # Data to be color-coded
-        locationmode = 'country names', # set of locations match entries in `locations`
-        colorscale = 'Reds',
-        colorbar_title = "Total Cases",
-    ))
-    fig.update_layout(
-        geo_scope='world', # limite map scope to USA
-    )
+    fig = px.choropleth(df_variantes, 
+              locations = 'country',
+              hover_name='country',
+              hover_data=['variant'],
+              color=np.log10(df_variantes["number_detections_variant"]), 
+              animation_frame="year_week",
+              color_continuous_scale="YlOrRd",
+              locationmode='country names',
+              scope="europe",
+              title='Covid-19',
+              height=600
+             )
     return fig
+
+def scattergeo():
+    fig2 = px.scatter_geo(df_variantes, locations='country', hover_name='country', color="variant", 
+                    size='new_cases',
+                animation_frame="year_week", projection="natural earth", scope='europe')
+    fig2.update_layout(
+            title = 'COVID<br>Variants',
+            geo_scope='europe',
+        )
+    return fig2
+
+
 
 
 colors = {
@@ -68,6 +95,13 @@ layout = dbc.Container([
                 dbc.Col([
                     dbc.Card(
                         dcc.Graph(figure=choropleth()), body=True, color=colors["nav"]
+                    )
+                ], width=12)
+            ]),
+            dbc.Row([
+                dbc.Col([
+                    dbc.Card(
+                        dcc.Graph(figure=scattergeo()), body=True, color=colors["nav"]
                     )
                 ], width=12)
             ]),
