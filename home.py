@@ -8,18 +8,13 @@ import plotly.express as px
 import numpy as np
 
 # Connect to main app.py file
-from app import app, server
+from app import app, server, df
 
 
 # Datasets
-df_vacinas = pd.read_csv('datasets/country_vaccinations.csv')
-df_variantes = pd.read_csv('datasets/data.csv')
-df_global_daily = pd.read_csv('datasets/worldometer_coronavirus_daily_data.csv')
-df_global_summary = pd.read_csv('datasets/worldometer_coronavirus_summary_data.csv')
-
 
 def choropleth():
-    fig = go.Figure(data=go.Choropleth(
+    '''fig = go.Figure(data=go.Choropleth(
         locations=df_global_summary['country'], # Spatial coordinates
         z = df_global_summary['total_confirmed'].astype(float), # Data to be color-coded
         locationmode = 'country names', # set of locations match entries in `locations`
@@ -29,7 +24,7 @@ def choropleth():
     fig.update_layout(
         geo_scope='world', # limite map scope to USA
     )
-    return fig
+    return fig'''
 
 
 colors = {

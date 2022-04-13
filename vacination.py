@@ -8,27 +8,11 @@ import plotly.express as px
 import numpy as np
 
 # Connect to main app.py file
-from app import app, server
-
-
-# Datasets
-df_vacinas = pd.read_csv('datasets/country_vaccinations.csv')
-df_variants = pd.read_csv('datasets/data.csv')
-df_global_daily = pd.read_csv('datasets/worldometer_coronavirus_daily_data.csv')
-df_global_summary = pd.read_csv('datasets/worldometer_coronavirus_summary_data.csv')
-
-
-df_vacinas=df_vacinas.drop(columns=['source_name','source_website'])
-df_vacinas=df_vacinas.dropna()
-
-df_Portugal = df_vacinas.loc[df_vacinas["country"] == 'Portugal']
-df_Portugal.tail()
+from app import app, server, df
 
 
 def scatter_geo():
-    figVacines1 = px.scatter_geo(df_vacinas, locations='iso_code', hover_name='country', color=df_vacinas["daily_vaccinations"], 
-                size=df_vacinas["daily_vaccinations"],animation_frame="date", projection="natural earth", title = 'Daily Vaccinations')
-    return figVacines1
+    return 0
 
 
 colors = {

@@ -8,20 +8,10 @@ import pandas as pd
 import plotly.graph_objs as go
 
 
+# Datasets
+df = pd.read_csv('datasets/owid-covid-data.csv')
+df = df[df['continent'].notna()]
 
-######################################################Interactive Components############################################
-
-#country_options = [dict(label=country, value=country) for country in df['country_name'].unique()]
-
-#dropdown_country = dcc.Dropdown(
-#        id='country_drop',
-#        options=country_options,
-#        value=['Portugal'],
-#        multi=True
-#    )
-
-
-##################################################APP###################################################################
 # To be responsive
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
@@ -30,17 +20,17 @@ server = app.server
 app.config.suppress_callback_exceptions = True
 app.title = 'Covid-19'
 
-######################################################NavBar##############################################################
+# NavBar
 # To connect to app pages
 import home
 import deaths
 import variants
 import vacination
 
-nav_home = dbc.NavItem(dbc.NavLink("Home", href="/home", active="exact"))
+#nav_home = dbc.NavItem(dbc.NavLink("Home", href="/home", active="exact"))
 nav_deaths = dbc.NavItem(dbc.NavLink("Deaths", href="/deaths", active="exact"))
-nav_variants = dbc.NavItem(dbc.NavLink("Variants", href="/variants", active="exact"))
-nav_vacination = dbc.NavItem(dbc.NavLink("Vacination", href="/vacination", active="exact"))
+#nav_variants = dbc.NavItem(dbc.NavLink("Variants", href="/variants", active="exact"))
+#nav_vacination = dbc.NavItem(dbc.NavLink("Vacination", href="/vacination", active="exact"))
 
 
 colors = {
@@ -65,7 +55,7 @@ logo = dbc.Navbar(
             dbc.NavbarToggler(id="navbar-toggler2"),
             dbc.Collapse(
                 dbc.Nav(
-                    [nav_home, nav_deaths, nav_variants, nav_vacination], className="ml-auto", navbar=True
+                    [nav_deaths], className="ml-auto", navbar=True
                 ),
                 id="navbar-collapse2",
                 navbar=True
@@ -81,19 +71,20 @@ logo = dbc.Navbar(
 content = html.Div(id="page-content")
 
 app.layout = html.Div(
+    #html.Link(rel="stylesheet", href="css/pico.min.css"),
     [dcc.Location(id="url"), logo, content], style={'backgroundColor': colors['background']}
 )
 
 @app.callback(Output("page-content", "children"), [Input("url", "pathname")])
 def render(pathname):
-    if pathname == "/" or pathname == "/home":
-        return home.layout
-    elif pathname == "/deaths":
+    #if pathname == "/" or pathname == "/home":
+    #    return home.layout
+    if pathname == "/deaths":
         return deaths.layout
-    elif pathname == "/variants":
-        return variants.layout
-    elif pathname == "/vacination":
-        return vacination.layout
+    #elif pathname == "/variants":
+    #    return variants.layout
+    #elif pathname == "/vacination":
+    #    return vacination.layout
     return dbc.Jumbotron(
         [
             html.H1("Error 404: Page not found", className="text-danger"),
