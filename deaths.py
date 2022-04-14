@@ -11,6 +11,12 @@ import numpy as np
 from app import app, server, df
 
 
+colors = {
+    'background': '#F6F5F3',
+    'text': '#4B5B81',
+    'nav': '#283044'
+}
+
 # Interactive Components
 def total_deaths():
     df_tmp = df[df['total_cases'].notna() & df['total_deaths'].notna()]
@@ -22,69 +28,110 @@ def total_deaths():
 
     return fig
 
-cases_vs_deaths = dcc.Tabs([
-        dcc.Tab(label='New Cases per million', children=[
-            dcc.Graph(
-                figure = px.choropleth(df, 
-                    locations = 'iso_code',
-                    hover_name='location',
-                    #hover_data=['variant'],
-                    color="new_cases_per_million", 
-                    animation_frame="date",
-                    color_continuous_scale="YlOrRd",
-                    #locationmode='country names',
-                    #scope="europe",
-                    projection="natural earth",
-                    height=700)
-            )
-        ]),
-        dcc.Tab(label='New Deaths per million', children=[
-            dcc.Graph(
-                figure = px.choropleth(df, 
-                    locations = 'iso_code',
-                    hover_name='location',
-                    #hover_data=['variant'],
-                    color="new_deaths_per_million", 
-                    animation_frame="date",
-                    color_continuous_scale="YlOrRd",
-                    #locationmode='country names',
-                    #scope="europe",
-                    projection="natural earth",
-                    height=700)
-            )
-        ]),
-])
-
 def new_deaths():
+    fig = px.line(df, x="date", y="new_deaths", color='continent')
+    return fig
+
+
+def total_cases():
+    fig = px.choropleth(df, 
+              locations = 'iso_code',
+              hover_name='location',
+              #hover_data=['variant'],
+              color="total_cases", 
+              animation_frame="date",
+              color_continuous_scale="YlOrRd",
+              #locationmode='country names',
+              #scope="europe",
+              title='Cases of Covid-19',
+              projection="natural earth",
+              height=700)
+    return fig
+
+def new_cases():
     fig = px.line(df, x="date", y="new_cases", color='continent')
     return fig
 
-continent_options = [dict(label=continent, value=continent) for continent in df['continent'].unique()]
 
-dropdown_continent = dcc.Dropdown(
-        id='continent_drop',
-        options=continent_options,
-        value=['Europe'],
-        multi=True
-    )
+cases_vs_deaths = dcc.Tabs([
+        dcc.Tab(label='Cases', children=[
+            html.Br(),html.Br(),
+            dbc.Row([            
+                dbc.Col([
+                    html.H3('New Cases per million', style={'textAlign': 'center', 'color': colors["text"]}),
+                    dcc.Graph(
+                        figure = px.choropleth(df, 
+                            locations = 'iso_code',
+                            hover_name='location',
+                            #hover_data=['variant'],
+                            color="new_cases_per_million", 
+                            animation_frame="date",
+                            color_continuous_scale="YlOrRd",
+                            #locationmode='country names',
+                            #scope="europe",
+                            projection="natural earth",
+                            height=700)
+                    )
+                ])
+            ]),
+            html.Br(),html.Br(),
+            dbc.Row([            
+                dbc.Col([
+                    html.H3('Total Covid-19 Cases', style={'textAlign': 'center', 'color': colors["text"]}),
+                    dbc.Card(
+                        dcc.Graph(figure=total_cases()), body=True
+                    )
+                ], width=6),
+                
+                dbc.Col([
+                    html.H3('New Covid-19 Cases', style={'textAlign': 'center', 'color': colors["text"]}),
+                    dbc.Card(
+                        dcc.Graph(figure=new_cases()), body=True
+                    )
+                ], width=6),
+            ]),
+        ]),
+        dcc.Tab(label='Deaths', children=[
+            html.Br(),html.Br(),
+            dbc.Row([            
+                dbc.Col([
+                    html.H3('New Deaths per million', style={'textAlign': 'center', 'color': colors["text"]}),
+                    dcc.Graph(
+                        figure = px.choropleth(df, 
+                            locations = 'iso_code',
+                            hover_name='location',
+                            #hover_data=['variant'],
+                            color="new_deaths_per_million", 
+                            animation_frame="date",
+                            color_continuous_scale="YlOrRd",
+                            #locationmode='country names',
+                            #scope="europe",
+                            projection="natural earth",
+                            height=700)
+                    ),
+                ])
+            ]),
+            html.Br(),html.Br(),
+            dbc.Row([            
+                dbc.Col([
+                    html.H3('Total Covid-19 Deaths', style={'textAlign': 'center', 'color': colors["text"]}),
+                    dbc.Card(
+                        dcc.Graph(figure=total_deaths()), body=True
+                    )
+                ], width=6),
+                
+                dbc.Col([
+                    html.H3('New Covid-19 Deaths', style={'textAlign': 'center', 'color': colors["text"]}),
+                    dbc.Card(
+                        dcc.Graph(figure=new_deaths()), body=True
+                    )
+                ], width=6),
+            ])
+        ])
+])
 
-@app.callback(
-    Output('dd-output-container', 'children'),
-    Input('demo-dropdown', 'value')
-)
-def update_new_deaths(value):
-    fig = px.line(df.query('continent=="'+value+'"'), x="date", y="new_cases", color='country')
-    return fig
 
-
-
-
-colors = {
-    'background': '#F6F5F3',
-    'text': '#4B5B81',
-    'nav': '#283044'
-}
-
+# Layout
 content = html.Div(id="page-content")
 
 layout = dbc.Container([
@@ -107,36 +154,6 @@ layout = dbc.Container([
                 ], width=12)
             ], align='justify'),
             html.Br(),html.Br(),
-
-            dbc.Row([            
-                dbc.Col([
-                    html.H3('Total Covid-19 deaths in the world', style={'textAlign': 'center', 'color': colors["text"]}),
-                    dbc.Card(
-                        dcc.Graph(figure=total_deaths()), body=True
-                    )
-                ], width=6),
-                
-                dbc.Col([
-                    html.H3('Continent Choice'),
-                    dropdown_continent,
-                    html.Div(id='dropdown_country_container'),
-                    html.Br(), html.Br(),
-                    html.H3('New Covid-19 deaths in the world by continent', style={'textAlign': 'center', 'color': colors["text"]}),
-                    dbc.Card(
-                        dcc.Graph(figure=new_deaths()), body=True
-                    )
-                ], width=6),
-            ]),
-            html.Br(),html.Br(),
-
-            dbc.Row([
-                
-            ]),
-            dbc.Row([
-                dbc.Col([
-                    
-                ], width=6)
-            ]),
 
             # Footer
             dbc.Row([

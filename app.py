@@ -10,6 +10,7 @@ import plotly.graph_objs as go
 
 # Datasets
 df = pd.read_csv('datasets/owid-covid-data.csv')
+df = df.dropna(how='all')
 df = df[df['continent'].notna()]
 
 # To be responsive
@@ -26,11 +27,13 @@ import home
 import deaths
 import variants
 import vacination
+import tests
 
-#nav_home = dbc.NavItem(dbc.NavLink("Home", href="/home", active="exact"))
-nav_deaths = dbc.NavItem(dbc.NavLink("Deaths", href="/deaths", active="exact"))
-#nav_variants = dbc.NavItem(dbc.NavLink("Variants", href="/variants", active="exact"))
-#nav_vacination = dbc.NavItem(dbc.NavLink("Vacination", href="/vacination", active="exact"))
+nav_home = dbc.NavItem(dbc.NavLink("Home", href="/home", active="exact"))
+nav_deaths = dbc.NavItem(dbc.NavLink("Cases and Deaths", href="/deaths", active="exact"))
+nav_variants = dbc.NavItem(dbc.NavLink("Variants", href="/variants", active="exact"))
+nav_vacination = dbc.NavItem(dbc.NavLink("Vacination", href="/vacination", active="exact"))
+nav_tests = dbc.NavItem(dbc.NavLink("Tests", href="/tests", active="exact"))
 
 
 colors = {
@@ -55,7 +58,7 @@ logo = dbc.Navbar(
             dbc.NavbarToggler(id="navbar-toggler2"),
             dbc.Collapse(
                 dbc.Nav(
-                    [nav_deaths], className="ml-auto", navbar=True
+                    [nav_home, nav_deaths, nav_tests, nav_vacination, nav_variants], className="ml-auto", navbar=True
                 ),
                 id="navbar-collapse2",
                 navbar=True
@@ -67,7 +70,7 @@ logo = dbc.Navbar(
     className="mb-3",
 )
 
-############################################Title##########################################################
+# Layout
 content = html.Div(id="page-content")
 
 app.layout = html.Div(
@@ -77,14 +80,16 @@ app.layout = html.Div(
 
 @app.callback(Output("page-content", "children"), [Input("url", "pathname")])
 def render(pathname):
-    #if pathname == "/" or pathname == "/home":
-    #    return home.layout
-    if pathname == "/deaths":
+    if pathname == "/" or pathname == "/home":
+        return home.layout
+    elif pathname == "/deaths":
         return deaths.layout
-    #elif pathname == "/variants":
-    #    return variants.layout
-    #elif pathname == "/vacination":
-    #    return vacination.layout
+    elif pathname == "/tests":
+        return tests.layout
+    elif pathname == "/variants":
+        return variants.layout
+    elif pathname == "/vacination":
+        return vacination.layout
     return dbc.Jumbotron(
         [
             html.H1("Error 404: Page not found", className="text-danger"),

@@ -14,17 +14,19 @@ from app import app, server, df
 # Datasets
 
 def choropleth():
-    '''fig = go.Figure(data=go.Choropleth(
-        locations=df_global_summary['country'], # Spatial coordinates
-        z = df_global_summary['total_confirmed'].astype(float), # Data to be color-coded
-        locationmode = 'country names', # set of locations match entries in `locations`
-        colorscale = 'Reds',
-        colorbar_title = "Total Cases",
-    ))
-    fig.update_layout(
-        geo_scope='world', # limite map scope to USA
-    )
-    return fig'''
+    fig = px.choropleth(df, 
+              locations = 'iso_code',
+              hover_name='location',
+              #hover_data=['variant'],
+              color="total_cases", 
+              animation_frame="date",
+              color_continuous_scale="YlOrRd",
+              #locationmode='country names',
+              #scope="europe",
+              title='Cases of Covid-19',
+              projection="natural earth",
+              height=700)
+    return fig
 
 
 colors = {
