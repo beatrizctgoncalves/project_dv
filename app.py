@@ -25,14 +25,12 @@ app.title = 'Covid-19'
 # To connect to app pages
 import home
 import deaths
-import variants
-import vacination
+import vaccination
 import tests
 
 nav_home = dbc.NavItem(dbc.NavLink("Home", href="/home", active="exact"))
 nav_deaths = dbc.NavItem(dbc.NavLink("Cases and Deaths", href="/deaths", active="exact"))
-nav_variants = dbc.NavItem(dbc.NavLink("Variants", href="/variants", active="exact"))
-nav_vacination = dbc.NavItem(dbc.NavLink("Vacination", href="/vacination", active="exact"))
+nav_vaccination = dbc.NavItem(dbc.NavLink("Vaccination", href="/vaccination", active="exact"))
 nav_tests = dbc.NavItem(dbc.NavLink("Tests", href="/tests", active="exact"))
 
 
@@ -58,7 +56,7 @@ logo = dbc.Navbar(
             dbc.NavbarToggler(id="navbar-toggler2"),
             dbc.Collapse(
                 dbc.Nav(
-                    [nav_home, nav_deaths, nav_tests, nav_vacination, nav_variants], className="ml-auto", navbar=True
+                    [nav_home, nav_deaths, nav_tests, nav_vaccination], className="ml-auto", navbar=True
                 ),
                 id="navbar-collapse2",
                 navbar=True
@@ -86,10 +84,8 @@ def render(pathname):
         return deaths.layout
     elif pathname == "/tests":
         return tests.layout
-    elif pathname == "/variants":
-        return variants.layout
-    elif pathname == "/vacination":
-        return vacination.layout
+    elif pathname == "/vaccination":
+        return vaccination.layout
     return dbc.Jumbotron(
         [
             html.H1("Error 404: Page not found", className="text-danger"),

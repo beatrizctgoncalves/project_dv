@@ -11,6 +11,7 @@ import gmaps
 import gmaps.datasets
 import folium
 import branca
+import gmaps.geojson_geometries
 
 # Connect to main app.py file
 from app import app, server, df
@@ -22,42 +23,52 @@ colors = {
     'nav': '#283044'
 }
 
+df_tests = df.dropna(subset=['positive_rate','tests_per_case','total_tests_per_thousand', 'total_cases'])
+df_tests.sort_values(by = ['total_tests'], ascending=False, inplace=True)
+df_tests.reset_index(drop=True, inplace=True)
+df_table = df_tests.groupby(['continent', 'location']).agg({'total_tests_per_thousand': 'mean', 'positive_rate': 'mean', 'total_cases':'mean', 'tests_per_case':'mean', 'population':'mean'}).reset_index()
+df_show = df_tests.groupby(['date', 'continent', 'location']).agg({'total_tests_per_thousand': 'mean', 'positive_rate': 'mean', 'total_cases':'mean', 'tests_per_case':'mean', 'population':'mean'}).reset_index()
+
 # Interactive Components
 def total_tests():
-    url = (
-        "https://raw.githubusercontent.com/python-visualization/folium/master/examples/data"
+    rowEvenColor = 'lightgrey'
+    rowOddColor = 'white'
+
+    fig = go.Figure(data=[go.Table(
+        header=dict(values=list(['<br>Country', '<br>Total tests per 1000', 'Positives rate<br>       (%)', '<br>Total number of cases', '<br>Tests per case', '<br>Population size']),
+                    line_color='darkslategray',
+                    fill_color='royalblue',
+                    align=['left','center','center','center','center','center'],
+                    font=dict(color='white', size=14),
+                    height=20,
+                    ),
+        cells=dict(values=[df_table.location, round(df_table.total_tests_per_thousand), (round(df_table.positive_rate * 100)), round(df_table.total_cases), round(df_table.tests_per_case), round(df_table.population)],
+                line_color='darkslategray',
+                fill_color = [[rowOddColor,rowEvenColor,rowOddColor, rowEvenColor,rowOddColor, rowEvenColor]*100],
+                font=dict(color='black', size=11),
+                align=['left','center'])
+        )])        
+    fig.update_layout(
+        showlegend=False,
     )
-    state_geo = f"{url}/world-countries.json"
-
-    m = folium.Map(location=[0, 0], zoom_start=2)
-
-    folium.Choropleth(
-        geo_data=state_geo,
-        data=df['total_tests'],
-        columns=["location", "total_tests"],
-        key_on="feature.id",
-        fill_color="BuPu",
-        fill_opacity=0.7,
-        line_opacity=0.5,
-        legend_name="Total Covid 19 tests",
-        reset=True,
-    ).add_to(m)
-
-    return m
-
-def tests_per_day():
-    fig = px.choropleth(df, 
-              locations = 'iso_code',
-              hover_name='location',
-              #hover_data=['variant'],
-              color="new_tests_smoothed_per_thousand", 
-              animation_frame="date",
-              color_continuous_scale=[(0, 'rgba(255,254,230,255)'), (0.5, 'rgba(0,69,40,255)'), (1.0, 'rgb(0,0,0)')],
-              #locationmode='country names',
-              #scope="europe",
-              projection="natural earth",
-              height=700)
     return fig
+
+def tests_per_thousand():
+    df_bar = df_tests.groupby(['date', 'continent']).agg({'total_tests_per_thousand': 'mean', 'positive_rate': 'mean', 'total_cases':'mean', 'tests_per_case':'mean', 'population':'mean'}).reset_index()
+    fig = px.bar(df_bar, x='date', y='total_tests_per_thousand',
+             hover_data=['total_tests_per_thousand', 'positive_rate'], color='continent',
+             height=500)
+    return fig
+
+def gmaps_graph():
+    '''gmaps.configure(api_key='AIzaSyAIAYSB9Ipt02TQVMQQctAOwwqGZm0BYrg')
+    countries_geojson = gmaps.geojson_geometries.load_geometry('countries')
+    fig = gmaps.figure()
+    gini_layer = gmaps.geojson_layer(countries_geojson)
+    fig.add_layer(gini_layer)
+    '''
+    return 0
+
 
 
 # Layout
@@ -79,17 +90,29 @@ layout = dbc.Container([
 
             dbc.Row([            
                 dbc.Col([
-                    html.H3('Total Covid-19 Tests', style={'textAlign': 'center', 'color': colors["text"]}),
+                    html.H3('Data on Testing for Covid-19 in all', style={'textAlign': 'center', 'color': colors["text"]}),
                     dbc.Card(
-                        #dcc.Graph(figure=total_tests()), body=True
+                        dcc.Graph(figure=total_tests()), body=True
                     )
-                ], width=6),
+                ], width=12),
+            ]),
+            html.Br(),html.Br(),
+            dbc.Row([
                 dbc.Col([
-                    html.H3('Tests for Covid-19 per day', style={'textAlign': 'center', 'color': colors["text"]}),
+                    html.H3('Tests for Covid-19 per thousand', style={'textAlign': 'center', 'color': colors["text"]}),
                     dbc.Card(
-                        dcc.Graph(figure=tests_per_day()), body=True
+                        dcc.Graph(figure=tests_per_thousand()), body=True
                     )
-                ], width=6)
+                ], width=12)
+            ]),
+            html.Br(),html.Br(),
+            dbc.Row([
+                dbc.Col([
+                    html.H3('Tests for Covid-19 per thousand', style={'textAlign': 'center', 'color': colors["text"]}),
+                    dbc.Card(
+                        dcc.Graph(figure=gmaps_graph()), body=True
+                    )
+                ], width=12)
             ]),
 
             # Footer
