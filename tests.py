@@ -29,7 +29,7 @@ def total_tests():
     )
     state_geo = f"{url}/world-countries.json"
 
-    fig = folium.Map(location=[0, 0], zoom_start=2)
+    m = folium.Map(location=[0, 0], zoom_start=2)
 
     folium.Choropleth(
         geo_data=state_geo,
@@ -41,9 +41,9 @@ def total_tests():
         line_opacity=0.5,
         legend_name="Total Covid 19 tests",
         reset=True,
-    ).add_to(fig)
+    ).add_to(m)
 
-    return fig
+    return m
 
 def tests_per_day():
     fig = px.choropleth(df, 

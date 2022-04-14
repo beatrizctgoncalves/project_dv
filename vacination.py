@@ -18,7 +18,7 @@ def vacionation_per_100():
     my_raceplot = barplot(df_2122,  item_column='location', value_column='total_vaccinations_per_hundred', time_column='date', top_entries=10)
     my_raceplot.plot(item_label = 'Top Country', value_label = 'Vaccinations per 100 people', frame_duration = 600)
 
-
+'''
 df_vac = df[df['population'].notna() & df['people_vaccinated'].notna() & df['people_fully_vaccinated'].notna()]
 df_vac = df_vac.groupby('location').agg({'people_vaccinated': 'max', 'people_fully_vaccinated': 'max', 'population':'max'}).reset_index()
 df_vac[['population', 'people_vaccinated', 'people_fully_vaccinated']] = df_vac[['population', 'people_vaccinated', 'people_fully_vaccinated']].astype(int)
@@ -61,7 +61,7 @@ def total_vacination():
     ))
     fig.update_layout(barmode='stack')
     return fig
-
+'''
 
 colors = {
     'background': '#F6F5F3',
@@ -97,7 +97,7 @@ layout = dbc.Container([
                 dbc.Col([
                     html.H3('New Covid-19 Deaths', style={'textAlign': 'center', 'color': colors["text"]}),
                     dbc.Card(
-                        dcc.Graph(figure=total_vacination()), body=True
+                        #dcc.Graph(figure=total_vacination()), body=True
                     )
                 ], width=6)
             ], align='justify'),
