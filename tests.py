@@ -55,7 +55,6 @@ def tests_per_day():
               color_continuous_scale=[(0, 'rgba(255,254,230,255)'), (0.5, 'rgba(0,69,40,255)'), (1.0, 'rgb(0,0,0)')],
               #locationmode='country names',
               #scope="europe",
-              title='How many tests are performed each day?.',
               projection="natural earth",
               height=700)
     return fig
@@ -82,13 +81,11 @@ layout = dbc.Container([
                 dbc.Col([
                     html.H3('Total Covid-19 Tests', style={'textAlign': 'center', 'color': colors["text"]}),
                     dbc.Card(
-                        dcc.Graph(figure=total_tests()), body=True
+                        #dcc.Graph(figure=total_tests()), body=True
                     )
-                ], width=6)
-            ]),
-            dbc.Row([            
+                ], width=6),
                 dbc.Col([
-                    html.H3('Total Covid-19 Tests', style={'textAlign': 'center', 'color': colors["text"]}),
+                    html.H3('Tests for Covid-19 per day', style={'textAlign': 'center', 'color': colors["text"]}),
                     dbc.Card(
                         dcc.Graph(figure=tests_per_day()), body=True
                     )
