@@ -10,6 +10,7 @@ import plotly.graph_objs as go
 import pandas as pd
 import plotly.express as px
 import numpy as np
+from raceplotly.plots import barplot
 
 
 # Datasets
@@ -75,6 +76,14 @@ def total_tests():
     )
     return fig
 
+# Vaccination
+def vac_graph():
+    mask = (df['date'] > '2021-01-01') & (df['date'] <= '2022-04-10')
+    df_2122 = df.loc[mask]
+    my_raceplot = barplot(df_2122, item_column='location', value_column='total_vaccinations_per_hundred', time_column='date', top_entries=10)
+    my_raceplot.plot(item_label = 'Top Country', value_label = 'Vaccinations per 100 people', frame_duration = 600)
+    return my_raceplot.fig
+
 
 # Cases
 continent_options = [dict(label=continent, value=continent) for continent in df['continent'].unique()]
@@ -129,10 +138,10 @@ dropdown_deaths = dcc.Dropdown(
 
 
 # Tests
-dropdown_country_tests = dcc.Dropdown(
-        id='country_drop_tests',
-        options=country_options,
-        value=['Portugal', 'France', 'Spain', 'Italy'],
+dropdown_continent_tests = dcc.Dropdown(
+        id='continent_drop_tests',
+        options=continent_options,
+        value=['Europe', 'Asia', 'Africa'],
         multi=True
     )
 
@@ -278,19 +287,14 @@ choose_tab = dcc.Tabs([
             
             dbc.Row([
                 dbc.Col([
-                    html.H5('Continent Choice', style={'textAlign': 'center', 'color': colors["text"]}),
-                    dropdown_country_tests
-                ], width=6),
-                dbc.Col([
                     html.H5('Test Choice', style={'textAlign': 'center', 'color': colors["text"]}),
                     dropdown_tests
-                ], width=6),
+                ], width=12),
             ]),
             html.Br(),
             dbc.Row([
                 dbc.Col([#TODO
                     html.H3('Tests', style={'textAlign': 'center', 'color': colors["text"]}),
-                    #html.Br(),
                     dbc.Card(
                         dcc.Graph(id='tests_graph'), body=True
                     )
@@ -329,8 +333,18 @@ choose_tab = dcc.Tabs([
                     html.Br(),
                     html.H5('Linear or Log?', style={'textAlign': 'center', 'color': colors["text"]}),
                     radio_lin_log_vac,
+                    html.Br(),
                     dbc.Card(
                         dcc.Graph(id='scatter_graph'), body=True
+                    )
+                ], width=12)
+            ], align='center'),
+
+            dbc.Row([
+                dbc.Col([
+                    html.Br(),
+                    dbc.Card(
+                        dcc.Graph(figure=vac_graph()), body=True
                     )
                 ], width=12)
             ], align='center')
@@ -453,9 +467,7 @@ def new_cases(continents, scale):
         y_bar = df_bar['new_cases']
         data_bar.append(dict(type='scatter', x=x_bar, y=y_bar, name=continent))
 
-    layout_linear = dict(yaxis=dict(title='New Cases Per Day', type=['linear', 'log'][scale]),
-                  paper_bgcolor=colors['background']
-                  )
+    layout_linear = dict(yaxis=dict(title='New Cases Per Day', type=['linear', 'log'][scale]))
 
     return go.Figure(data=data_bar, layout=layout_linear)
 
@@ -473,9 +485,7 @@ def new_deaths(countries, scale, death):
         y_hist = df_hist[death]
         data_hist.append(dict(type='histogram', x=x_hist, y=y_hist, name=country))
 
-    layout_hist = dict(yaxis=dict(title=death, type=['linear', 'log'][scale]),
-                  paper_bgcolor=colors['background']
-                  )
+    layout_hist = dict(yaxis=dict(title=death, type=['linear', 'log'][scale]))
 
     return go.Figure(data=data_hist, layout=layout_hist)
 
@@ -483,29 +493,10 @@ def new_deaths(countries, scale, death):
 # Tests
 @app.callback(
     Output("tests_graph", "figure"),
-    [Input("country_drop_tests", "value"), Input("tests_option", "value")]
+    [Input("tests_option", "value")]
 )
-def tests_plot(countries, test):
-    data_hist = []
-    x_hist = 0
-    y_hist = 0
-
-    for country in countries:
-        df_hist = df.loc[(df['location'] == test)]
-        x_hist = df_hist['date']
-        y_hist = df_hist['total_tests']
-        #data_hist.append(dict(type='bar', x=x_hist, y=y_hist, name=country))
-
-    #layout_hist = dict(yaxis=dict(title=test, type=['linear', 'log'][0]))
-    fig = px.line(df_hist, 
-        x='date',
-        y='total_tests',
-        color="total_tests",
-        animation_frame="date",
-        #color_continuous_scale="YlOrRd",
-        markers=True,
-       # projection=['equirectangular', 'orthographic'][projection],
-        height=700)
+def tests_plot(test):
+    fig = px.bar(df, x="continent", y=test, animation_frame="date", color="continent", hover_name="location")
     return fig
 
 
@@ -524,9 +515,7 @@ def plots(countries, vaccination, scale):
         data_scatter.append(dict(type='scatter', x=x_scatter, y=y_scatter, name=country))
 
     layout_scatter = dict(title=dict(text='Total Vaccination from 2020 until 2022'),
-                  yaxis=dict(title='Vaccination', type=['linear', 'log'][scale]),
-                  paper_bgcolor=colors['background']
-                  )
+                  yaxis=dict(title='Vaccination', type=['linear', 'log'][scale]))
 
     return go.Figure(data=data_scatter, layout=layout_scatter)
 
