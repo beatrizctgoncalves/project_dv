@@ -11,6 +11,7 @@ import pandas as pd
 import plotly.express as px
 import numpy as np
 from raceplotly.plots import barplot
+from datetime import date
 
 
 # Datasets
@@ -104,9 +105,12 @@ dropdown_country_cases = dcc.Dropdown(
     multi=True
 )
 
+continent_options2 = [dict(label=continent, value=continent) for continent in df['continent'].unique()]
+continent_options2.append({'label': 'World', 'value': 'World'})
+continent_options2.remove({'label': 'Oceania', 'value': 'Oceania'})
 dropdown_scope = dcc.Dropdown(
         id='scope_continent',
-        options=continent_options,
+        options=continent_options2,
         value='world',
         persistence=True,
         persistence_type='session'
@@ -133,7 +137,7 @@ country_options = [dict(label=country, value=country) for country in df['locatio
 dropdown_country_deaths = dcc.Dropdown(
         id='country_drop_deaths',
         options=country_options,
-        value=['Portugal'],
+        value=['Portugal', 'France', 'Italy', 'Spain'],
         multi=True
     )
 
@@ -144,12 +148,26 @@ radio_lin_log_deaths = dcc.RadioItems(
         style={'textAlign': 'center'}
     )
 
-deaths_options_names = ['New_Deaths_Per_Million', 'New_Deaths_Smoothed_Per_Million']
+deaths_options_names = ['new_deaths_per_million', 'new_deaths_smoothed_per_million']
 deaths_options = [dict(label=deaths.replace('_', ' '), value=deaths) for deaths in deaths_options_names]
 dropdown_deaths = dcc.Dropdown(
         id='deaths_option',
         options=deaths_options,
         value='new_deaths_per_million',
+    )
+
+dropdown_scope2 = dcc.Dropdown(
+        id='scope_continent2',
+        options=continent_options2,
+        value='world'
+    )
+
+radio_projection2 = dcc.RadioItems(
+        id='projection2',
+        options=[dict(label='Equirectangular', value=0),
+                 dict(label='Orthographic', value=1)],
+        value=0,
+        style={'textAlign': 'center'}
     )
 
 
@@ -161,13 +179,13 @@ dropdown_continent_tests = dcc.Dropdown(
         multi=True
     )
 
-tests_options_names = ['total_tests', 'new_tests', 'total_tests_per_thousand', 'new_tests_per_thousand',
+tests_options_names = ['total_tests_per_thousand', 'new_tests_per_thousand',
        'new_tests_smoothed', 'new_tests_smoothed_per_thousand', 'positive_rate', 'tests_per_case', 'tests_units']
 tests_options = [dict(label=tests.replace('_', ' '), value=tests) for tests in tests_options_names]
 dropdown_tests = dcc.Dropdown(
         id='tests_option',
         options=tests_options,
-        value='total_tests'
+        value='total_tests_per_thousand'
     )
     
 
@@ -176,7 +194,7 @@ country_options = [dict(label=country, value=country) for country in df['locatio
 dropdown_country = dcc.Dropdown(
         id='country_drop',
         options=country_options,
-        value=['Portugal'],
+        value=['Portugal', 'France', 'Italy'],
         multi=True
     )
 
@@ -193,6 +211,16 @@ radio_lin_log_vac = dcc.RadioItems(
         options=[dict(label='Linear', value=0), dict(label='Log', value=1)],
         value=0,
         style={'textAlign': 'center'}
+    )
+
+
+# Graphics
+graph_names = ['chart', 'map', 'scatter']
+graph_options = [dict(label=vac.replace('_', ' '), value=vac) for vac in vaccination_names]
+dropdown_graph = dcc.Dropdown(
+        id='graph_option',
+        options=vaccination_options,
+        value='total_vaccinations',
     )
 
 
@@ -217,8 +245,10 @@ choose_tab = dcc.Tabs([
                 dbc.Col([
                     html.H5('Which Projection?', style={'textAlign': 'center', 'color': colors["text"]}),
                     radio_projection,
+                    html.Br(),
                     html.H5('Continent Choice', style={'textAlign': 'center', 'color': colors["text"]}),
                     dropdown_scope,
+                    html.Br(),
                     html.H3('Total Covid-19 Cases', style={'textAlign': 'center', 'color': colors["text"]}),
                     dbc.Card(
                         dcc.Graph(id='total_cases_graph'), body=True
@@ -257,9 +287,27 @@ choose_tab = dcc.Tabs([
             dbc.Row([            
                 dbc.Col([
                     html.H3('Total Covid-19 Deaths', style={'textAlign': 'center', 'color': colors["text"]}),
-                    dbc.Card(
-                        dcc.Graph(figure=total_deaths()), body=True
-                    )
+                    html.Br(),html.Br(),
+                    dcc.Tabs([
+                        dcc.Tab(label='World Map', children=[
+                            html.Br(),
+                            html.H5('Which Projection?', style={'textAlign': 'center', 'color': colors["text"]}),
+                            radio_projection2,
+                            html.Br(),
+                            html.H5('Continent Choice', style={'textAlign': 'center', 'color': colors["text"]}),
+                            dropdown_scope2,
+                            html.Br(),
+                            html.H3('Total Covid-19 Deaths', style={'textAlign': 'center', 'color': colors["text"]}),
+                            dbc.Card(
+                                dcc.Graph(id='total_deaths_graph'), body=True
+                            )
+                        ]),
+                        dcc.Tab(label='Pie Chart', children=[
+                            dbc.Card(
+                                dcc.Graph(figure=total_deaths()), body=True
+                            )
+                        ])
+                    ])
                 ], width=6),
                 
                 dbc.Col([
@@ -311,7 +359,7 @@ choose_tab = dcc.Tabs([
             ]),
             html.Br(),
             dbc.Row([
-                dbc.Col([#TODO
+                dbc.Col([
                     html.H3('Tests', style={'textAlign': 'center', 'color': colors["text"]}),
                     dbc.Card(
                         dcc.Graph(id='tests_graph'), body=True
@@ -336,6 +384,16 @@ choose_tab = dcc.Tabs([
 
             dbc.Row([
                 dbc.Col([
+                    html.Br(),
+                    dbc.Card(
+                        dcc.Graph(figure=vac_graph()), body=True
+                    )
+                ], width=12)
+            ], align='center'),
+            html.Br(),html.Br(),
+
+            dbc.Row([
+                dbc.Col([
                     html.H5('Country Choice', style={'textAlign': 'center', 'color': colors["text"]}),
                     dropdown_country,
                 ], width=6),
@@ -354,15 +412,6 @@ choose_tab = dcc.Tabs([
                     html.Br(),
                     dbc.Card(
                         dcc.Graph(id='scatter_graph'), body=True
-                    )
-                ], width=12)
-            ], align='center'),
-
-            dbc.Row([
-                dbc.Col([
-                    html.Br(),
-                    dbc.Card(
-                        dcc.Graph(figure=vac_graph()), body=True
                     )
                 ], width=12)
             ], align='center')
@@ -459,21 +508,7 @@ def render(pathname):
     [Input("projection", "value"), Input("scope_continent", "value")]
 )
 def total_cases(projection, scope):
-    
-    if scope == None:
-        fig = px.choropleth(df, 
-        locations = 'iso_code',
-        hover_name='location',
-        #hover_data=['variant'],
-        color="total_cases", 
-        animation_frame="date",
-        color_continuous_scale="YlOrRd",
-        #locationmode='country names',
-        projection=['equirectangular', 'orthographic'][projection],
-        height=700)
-
-    else:
-        fig = px.choropleth(df, 
+    fig = px.choropleth(df, 
         locations = 'iso_code',
         hover_name='location',
         #hover_data=['variant'],
@@ -498,12 +533,13 @@ def new_cases(countries, scale):
     for country in countries:
         df_bar = df.loc[(df['location'] == country)]
         x_bar = df_bar['date']
-        y_bar = df_bar['new_cases']
+        y_bar = df_bar['new_cases_per_million']
         data_bar.append(dict(type='scatter', x=x_bar, y=y_bar, name=country))
 
-    layout_linear = dict(yaxis=dict(title='New Cases Per Day', type=['linear', 'log'][scale]))
+    layout_linear = dict(yaxis=dict(title='New Cases Per Million', type=['linear', 'log'][scale]))
 
     return go.Figure(data=data_bar, layout=layout_linear)
+
 
 # Deaths
 @app.callback(
@@ -522,6 +558,23 @@ def new_deaths(countries, scale, death):
     layout_hist = dict(yaxis=dict(title=death, type=['linear', 'log'][scale]))
 
     return go.Figure(data=data_hist, layout=layout_hist)
+
+@app.callback(
+    Output("total_deaths_graph", "figure"),
+    [Input("projection2", "value"), Input("scope_continent2", "value")]
+)
+def total_deaths(projection, scope):
+    fig = px.choropleth(df, 
+        locations = 'iso_code',
+        hover_name='location',
+        color="total_deaths",
+        animation_frame="date",
+        color_continuous_scale="amp",
+        scope = scope.lower(),
+        projection=['equirectangular', 'orthographic'][projection],
+        height=700)
+
+    return fig
 
 
 # Tests
@@ -548,9 +601,7 @@ def plots(countries, vaccination, scale):
         y_scatter = df_scatter[vaccination]
         data_scatter.append(dict(type='scatter', x=x_scatter, y=y_scatter, name=country))
 
-    layout_scatter = dict(title=dict(text='Total Vaccination from 2020 until 2022'),
-                  yaxis=dict(title='Vaccination', type=['linear', 'log'][scale]))
-
+    layout_scatter = dict(yaxis=dict(title=vaccination, type=['linear', 'log'][scale]))
     return go.Figure(data=data_scatter, layout=layout_scatter)
 
 
