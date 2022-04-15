@@ -1,3 +1,4 @@
+from turtle import bgcolor
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
@@ -30,7 +31,7 @@ app.title = 'Covid-19'
 colors = {
     'background': '#F6F5F3',
     'nav': '#283044',
-    'text': '#4B5B81'
+    'text': '#fff'
 }
 
 COVID_LOGO = "assets/favicon.ico"
@@ -116,19 +117,20 @@ dropdown_scope = dcc.Dropdown(
         persistence_type='session'
     )
 
-radio_lin_log_cases = dcc.RadioItems(
+radio_lin_log_cases = dbc.Checklist(
         id='lin_log_cases',
-        options=[dict(label='Linear', value=0), dict(label='Log', value=1)],
-        value=0,
+        options=[dict(label='Linear', value=0)],
+        value=1,
+        switch=True,
         style={'textAlign': 'center'}
     )
 
-radio_projection = dcc.RadioItems(
+radio_projection = dbc.Checklist(
         id='projection',
-        options=[dict(label='Equirectangular', value=0),
-                 dict(label='Orthographic', value=1)],
-        value=0,
-        style={'textAlign': 'center'}
+        options=[dict(label='Equirectangular', value=0)],
+        value=[0],
+        switch=True,
+        style={'textAlign': 'center', 'color': '#fff'}
     )
 
 
@@ -167,7 +169,7 @@ radio_projection2 = dcc.RadioItems(
         options=[dict(label='Equirectangular', value=0),
                  dict(label='Orthographic', value=1)],
         value=0,
-        style={'textAlign': 'center'}
+        style={'textAlign': 'center', 'margin': '10px'}
     )
 
 
@@ -195,7 +197,8 @@ dropdown_country = dcc.Dropdown(
         id='country_drop',
         options=country_options,
         value=['Portugal', 'France', 'Italy'],
-        multi=True
+        multi=True,
+        placeholder='Select Countries'
     )
 
 vaccination_names = ['total_vaccinations', 'people_vaccinated', 'people_fully_vaccinated', 'people_vaccinated_per_hundred', 'people_fully_vaccinated_per_hundred']
@@ -228,33 +231,26 @@ dropdown_graph = dcc.Dropdown(
 choose_tab = dcc.Tabs([
         dcc.Tab(label='Cases', children=[
             html.Br(),html.Br(),
-            dbc.Row([
-                dbc.Col([
-                    html.H1('Confirmed Cases', style={'textAlign': 'center', 'color': colors["nav"]})
-                ], width=12)
-            ]),
-            dbc.Row([
-                dbc.Col([
-                    html.H5('This section shows the covid-19 cases between 2020 and 2022.', style={'textAlign': 'center', 'paddingLeft': '20px', 'paddingRight': '20px',
-                    'paddingTop': '20px'})
-                ], width=12)
-            ], align='center'),
-            html.Br(),html.Br(),
 
-            dbc.Row([            
-                dbc.Col([
-                    html.H5('Which Projection?', style={'textAlign': 'center', 'color': colors["text"]}),
-                    radio_projection,
+            html.Div([
+                html.Div([
                     html.Br(),
                     html.H5('Continent Choice', style={'textAlign': 'center', 'color': colors["text"]}),
                     dropdown_scope,
                     html.Br(),
-                    html.H3('Total Covid-19 Cases', style={'textAlign': 'center', 'color': colors["text"]}),
-                    dbc.Card(
-                        dcc.Graph(id='total_cases_graph'), body=True
-                    )
-                ], width=6),
-                
+                    html.H5('Which Projection?', style={'textAlign': 'center', 'color': colors["text"]}),
+                    dbc.Row([
+                        html.P('Orthographic', style={'paddingRight': '5px', 'color': '#fff'}),
+                        radio_projection
+                    ], style={'alignItems': 'center'})#TODO
+                ], style={'width': '30%'}, className='slicerblue'),
+            
+                html.Div([
+                    dcc.Graph(id='total_cases_graph')
+                ], style={'width': '70%'}, className='graphblue')
+            ], style={'display': 'flex'}),
+
+            dbc.Row([
                 dbc.Col([
                     html.H5('Country Choice', style={'textAlign': 'center', 'color': colors["text"]}),
                     dropdown_country_cases,
@@ -416,7 +412,7 @@ choose_tab = dcc.Tabs([
                 ], width=12)
             ], align='center')
         ])
-])
+], className='classTabs')
 
 # Navbar
 nav_home = dbc.NavItem(dbc.NavLink("Informations about Covid-19", href="/", active="exact"))
@@ -471,7 +467,7 @@ app.layout = html.Div([
             dbc.Col([
                 choose_tab
             ], width=12)
-        ], align='justify'),
+        ], align='justify', style={'backgroundColor': '#fff'}),
         html.Br(),html.Br(),
 
         # Footer
@@ -508,17 +504,28 @@ def render(pathname):
     [Input("projection", "value"), Input("scope_continent", "value")]
 )
 def total_cases(projection, scope):
-    fig = px.choropleth(df, 
-        locations = 'iso_code',
-        hover_name='location',
-        #hover_data=['variant'],
-        color="total_cases", 
-        animation_frame="date",
-        color_continuous_scale="YlOrRd",
-        scope = scope.lower(),
-        #locationmode='country names',
-        projection=['equirectangular', 'orthographic'][projection],
-        height=700)
+    if len(projection):
+        fig = px.choropleth(df, 
+            locations = 'iso_code',
+            hover_name='location',
+            color="total_cases", 
+            animation_frame="date",
+            color_continuous_scale="YlOrRd",
+            scope = scope.lower(),
+            title='Total Covid-19 Cases',
+            projection=['equirectangular', 'orthographic'][0],
+            height=700)
+    else:
+        fig = px.choropleth(df, 
+            locations = 'iso_code',
+            hover_name='location',
+            color="total_cases", 
+            animation_frame="date",
+            color_continuous_scale="YlOrRd",
+            scope = scope.lower(),
+            title='Total Covid-19 Cases',
+            projection=['equirectangular', 'orthographic'][1],
+            height=700)
 
     return fig
     
