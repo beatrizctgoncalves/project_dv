@@ -19,6 +19,8 @@ from datetime import date
 df = pd.read_csv('datasets/owid-covid-data.csv')
 df = df.dropna(how='all')
 df = df[df['continent'].notna()]
+mask = (df['date'] > '2020-02-23') & (df['date'] <= '2022-04-12')
+df = df.loc[mask]
 
 # To be responsive
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -54,7 +56,6 @@ def total_tests():
     df_tests.sort_values(by = ['total_tests'], ascending=False, inplace=True)
     df_tests.reset_index(drop=True, inplace=True)
     df_table = df_tests.groupby(['continent', 'location']).agg({'total_tests_per_thousand': 'mean', 'positive_rate': 'mean', 'total_cases':'mean', 'tests_per_case':'mean', 'population':'mean'}).reset_index()
-    df_show = df_tests.groupby(['date', 'continent', 'location']).agg({'total_tests_per_thousand': 'mean', 'positive_rate': 'mean', 'total_cases':'mean', 'tests_per_case':'mean', 'population':'mean'}).reset_index()
     
     rowEvenColor = 'lightgrey'
     rowOddColor = 'white'
@@ -103,7 +104,8 @@ dropdown_country_cases = dcc.Dropdown(
     id='country_drop_cases',
     options=country_options,
     value=['Portugal'],
-    multi=True
+    multi=True,
+    placeholder='Select a country'
 )
 
 continent_options2 = [dict(label=continent, value=continent) for continent in df['continent'].unique()]
@@ -113,8 +115,7 @@ dropdown_scope = dcc.Dropdown(
         id='scope_continent',
         options=continent_options2,
         value='world',
-        persistence=True,
-        persistence_type='session'
+        placeholder='World'
     )
 
 radio_lin_log_cases = dbc.Checklist(
@@ -161,7 +162,8 @@ dropdown_deaths = dcc.Dropdown(
 dropdown_scope2 = dcc.Dropdown(
         id='scope_continent2',
         options=continent_options2,
-        value='world'
+        value='world',
+        placeholder='World'
     )
 
 radio_projection2 = dcc.RadioItems(
@@ -175,10 +177,10 @@ radio_projection2 = dcc.RadioItems(
 
 # Tests
 dropdown_continent_tests = dcc.Dropdown(
-        id='continent_drop_tests',
-        options=continent_options,
-        value=['Europe', 'Asia', 'Africa'],
-        multi=True
+        id='scope_tests',
+        options=continent_options2,
+        value='world',
+        placeholder='World'
     )
 
 tests_options_names = ['total_tests_per_thousand', 'new_tests_per_thousand',
@@ -209,21 +211,22 @@ dropdown_vaccination = dcc.Dropdown(
         value='total_vaccinations',
     )
 
-radio_lin_log_vac = dcc.RadioItems(
+radio_lin_log_vac = dbc.Checklist(
         id='lin_log_vac',
-        options=[dict(label='Linear', value=0), dict(label='Log', value=1)],
-        value=0,
-        style={'textAlign': 'center'}
+        options=[dict(label='Linear', value=0)],
+        value=[0],
+        switch=True,
+        style={'textAlign': 'center', 'color': '#fff'}
     )
 
 
 # Graphics
-graph_names = ['chart', 'map', 'scatter']
-graph_options = [dict(label=vac.replace('_', ' '), value=vac) for vac in vaccination_names]
-dropdown_graph = dcc.Dropdown(
-        id='graph_option',
-        options=vaccination_options,
-        value='total_vaccinations',
+choose_plot = dbc.Checklist(
+        id='plot_option',
+        options=[dict(label='Bar Chart', value=0)],
+        value=[0],
+        switch=True,
+        style={'textAlign': 'center', 'color': '#fff'}
     )
 
 
@@ -237,12 +240,12 @@ choose_tab = dcc.Tabs([
                     html.Br(),
                     html.H5('Continent Choice', style={'textAlign': 'center', 'color': colors["text"]}),
                     dropdown_scope,
-                    html.Br(),
+                    html.Br(),html.Br(),
                     html.H5('Which Projection?', style={'textAlign': 'center', 'color': colors["text"]}),
                     dbc.Row([
-                        html.P('Orthographic', style={'paddingRight': '5px', 'color': '#fff'}),
+                        html.P('Orthographic', style={'paddingLeft': '70px', 'paddingRight': '5px', 'color': '#fff'}),
                         radio_projection
-                    ], style={'alignItems': 'center'})#TODO
+                    ], style={'align': 'center'})#TODO
                 ], style={'width': '30%'}, className='slicerblue'),
             
                 html.Div([
@@ -255,56 +258,91 @@ choose_tab = dcc.Tabs([
                     dcc.Graph(id='new_cases_graph')
                 ], style={'width': '70%'}, className='graphblue'),
                 html.Div([
-                    html.Br(),
+                    html.Br(),html.Br(),
                     html.H5('Country Choice', style={'textAlign': 'center', 'color': colors["text"]}),
                     dropdown_country_cases,
-                    html.Br(),
+                    html.Br(),html.Br(),
                     dbc.Row([
-                        html.P('Log', style={'paddingRight': '5px', 'color': '#fff', 'textAlign': 'center'}),
+                        html.P('Log', style={'paddingLeft': '150px', 'paddingRight': '8px', 'color': '#fff'}),
                         radio_lin_log_cases
-                    ], style={'alignItems': 'center'})#TODO
+                    ], style={'align': 'center'})#TODO
                 ], style={'width': '30%'}, className='slicerblue')
-            ], style={'display': 'flex'}),
+            ], style={'display': 'flex'})
         ]),
+
+        # Deaths
         dcc.Tab(label='Deaths', children=[
             html.Br(),html.Br(),
-            dbc.Row([
-                dbc.Col([
-                    html.H1('Confirmed Deaths', style={'textAlign': 'center', 'color': colors["nav"]})
-                ], width=12)
+
+            dcc.Tabs([
+                dcc.Tab(label='World Map', children=[
+                    html.Br(),html.Br(),
+                    html.Div([
+                        html.Div([
+                            dcc.Graph(id='total_deaths_graph')
+                        ], style={'width': '70%'}, className='graphblue'),
+                        html.Div([
+                            html.Br(),html.Br(),
+                            html.H5('Continent Choice', style={'textAlign': 'center', 'color': colors["text"]}),
+                            dropdown_scope2,
+                            html.Br(),html.Br(),
+                            dbc.Row([
+                                html.P('Log', style={'paddingLeft': '150px', 'paddingRight': '8px', 'color': '#fff'}),
+                                radio_projection2
+                            ], style={'align': 'center'})
+                        ], style={'width': '30%'}, className='slicerblue')
+                    ], style={'display': 'flex'}),
+                    
+                    html.Div([
+                        html.Div([
+                            html.H5('Which Projection?', style={'textAlign': 'center', 'color': colors["text"]}),
+                            #radio_projection2,
+                            html.Br(),
+                            html.H5('Continent Choice', style={'textAlign': 'center', 'color': colors["text"]}),
+                            #dropdown_scope2,
+                            html.Br(),
+                            html.H3('Total Covid-19 Deaths', style={'textAlign': 'center', 'color': colors["text"]}),
+                            dbc.Card(
+                                #dcc.Graph(id='total_deaths_graph'), body=True
+                            )
+                        ], style={'width': '100%', 'heigh': '1000px'}, className='slicerblue')
+                    ], style={'display': 'flex'}),
+                ]),
+                dcc.Tab(label='Pie Chart', children=[
+                    dbc.Card(
+                        dcc.Graph(figure=total_deaths()), body=True
+                    )
+                ])
             ]),
-            dbc.Row([
-                dbc.Col([
-                    html.H5('This section visualises the covid-19 deaths between 2020 and 2022.', style={'textAlign': 'center', 'paddingLeft': '20px', 'paddingRight': '20px',
-                    'paddingTop': '20px'})
-                ], width=12)
-            ], align='center'),
+
             html.Br(),html.Br(),
+            html.H5('Which Projection?', style={'textAlign': 'center', 'color': colors["text"]}),
+            dbc.Row([
+                html.P('Orthographic', style={'paddingLeft': '70px', 'paddingRight': '5px', 'color': '#fff'}),
+                #radio_projection
+            ], style={'align': 'center'}),#TODO
+
+            html.Div([
+                html.Div([
+                    #dcc.Graph(id='new_cases_graph')
+                ], style={'width': '70%'}, className='graphblue'),
+                html.Div([
+                    html.Br(),html.Br(),
+                    html.H5('Country Choice', style={'textAlign': 'center', 'color': colors["text"]}),
+                    #dropdown_country_cases,
+                    html.Br(),html.Br(),
+                    dbc.Row([
+                        html.P('Log', style={'paddingLeft': '150px', 'paddingRight': '8px', 'color': '#fff'}),
+                        #radio_lin_log_cases
+                    ], style={'align': 'center'})#TODO
+                ], style={'width': '30%'}, className='slicerblue')
+            ], style={'display': 'flex'}),
 
             dbc.Row([            
                 dbc.Col([
                     html.H3('Total Covid-19 Deaths', style={'textAlign': 'center', 'color': colors["text"]}),
                     html.Br(),html.Br(),
-                    dcc.Tabs([
-                        dcc.Tab(label='World Map', children=[
-                            html.Br(),
-                            html.H5('Which Projection?', style={'textAlign': 'center', 'color': colors["text"]}),
-                            radio_projection2,
-                            html.Br(),
-                            html.H5('Continent Choice', style={'textAlign': 'center', 'color': colors["text"]}),
-                            dropdown_scope2,
-                            html.Br(),
-                            html.H3('Total Covid-19 Deaths', style={'textAlign': 'center', 'color': colors["text"]}),
-                            dbc.Card(
-                                dcc.Graph(id='total_deaths_graph'), body=True
-                            )
-                        ]),
-                        dcc.Tab(label='Pie Chart', children=[
-                            dbc.Card(
-                                dcc.Graph(figure=total_deaths()), body=True
-                            )
-                        ])
-                    ])
+                    
                 ], width=6),
                 
                 dbc.Col([
@@ -325,93 +363,56 @@ choose_tab = dcc.Tabs([
         ]),
         dcc.Tab(label='Tests', children=[
             html.Br(),html.Br(),
-            dbc.Row([
-                dbc.Col([
-                    html.H1('Tests for Covid-19', style={'textAlign': 'center', 'color': colors["nav"]})
-                ], width=12)
-            ]),
-            dbc.Row([
-                dbc.Col([
-                    html.H5('This section visualises the covid-19 tests done between 2020 and 2022.', style={'textAlign': 'center', 'paddingLeft': '20px', 'paddingRight': '20px',
-                    'paddingTop': '20px'})
-                ], width=12)
-            ], align='center'),
-            html.Br(),html.Br(),
 
-            dbc.Row([            
-                dbc.Col([
-                    html.H3('Data on Testing for Covid-19 in all', style={'textAlign': 'center', 'color': colors["text"]}),
-                    dbc.Card(
-                        dcc.Graph(figure=total_tests()), body=True
-                    )
-                ], width=12)
-            ]),
-            html.Br(),html.Br(),
-            
-            dbc.Row([
-                dbc.Col([
-                    html.H5('Test Choice', style={'textAlign': 'center', 'color': colors["text"]}),
-                    dropdown_tests
-                ], width=12),
-            ]),
-            html.Br(),
-            dbc.Row([
-                dbc.Col([
-                    html.H3('Tests', style={'textAlign': 'center', 'color': colors["text"]}),
-                    dbc.Card(
-                        dcc.Graph(id='tests_graph'), body=True
-                    )
-                ], width=12),
-            ])
+            html.Div([
+                html.Div([
+                    dcc.Graph(figure=total_tests())
+                ], style={'width': '100%', 'height': '480px'}, className='slicerblue'),
+            ], style={'display': 'flex'}),
+
+            html.Div([
+                html.Div([
+                    html.Br(),html.Br(),
+                    html.H5('Options to visualize', style={'textAlign': 'center', 'color': colors["text"]}),
+                    dropdown_tests,
+                    html.Br(),html.Br(),
+                    dbc.Row([
+                        html.P('World Map', style={'paddingLeft': '100px', 'paddingRight': '8px', 'color': '#fff'}),
+                        choose_plot
+                    ], style={'align': 'center'})#TODO
+                ], style={'width': '30%'}, className='slicerblue'),
+                html.Div([
+                    dcc.Graph(id='tests_graph')
+                ], style={'width': '70%'}, className='graphblue'),
+            ], style={'display': 'flex'})
         ]),
         dcc.Tab(label='Vaccinations', children=[
             html.Br(),html.Br(),
-            dbc.Row([
-                dbc.Col([
-                    html.H1('Vaccinations', style={'textAlign': 'center', 'color': colors["nav"]})
-                ], width=12)
-            ]),
-            dbc.Row([
-                dbc.Col([
-                    html.H5('This section shows the covid-19 vaccinations between 2020 and 2022.', style={'textAlign': 'center', 'paddingLeft': '20px', 'paddingRight': '20px',
-                    'paddingTop': '20px'})
-                ], width=12)
-            ], align='center'),
-            html.Br(),html.Br(),
 
-            dbc.Row([
-                dbc.Col([
+            html.Div([
+                html.Div([
+                    dcc.Graph(figure=vac_graph())
+                ], style={'width': '100%', 'height': '480px'}, className='slicerblue'),
+            ], style={'display': 'flex'}),
+
+            html.Div([
+                html.Div([
                     html.Br(),
-                    dbc.Card(
-                        dcc.Graph(figure=vac_graph()), body=True
-                    )
-                ], width=12)
-            ], align='center'),
-            html.Br(),html.Br(),
-
-            dbc.Row([
-                dbc.Col([
                     html.H5('Country Choice', style={'textAlign': 'center', 'color': colors["text"]}),
                     dropdown_country,
-                ], width=6),
-                dbc.Col([
+                    html.Br(),
                     html.H5('Vaccination Choice', style={'textAlign': 'center', 'color': colors["text"]}),
-                    dropdown_vaccination
-                ], width=6)
-            ], align='center'),
-            html.Br(),
-
-            dbc.Row([
-                dbc.Col([
+                    dropdown_vaccination,
                     html.Br(),
-                    html.H5('Linear or Log?', style={'textAlign': 'center', 'color': colors["text"]}),
-                    radio_lin_log_vac,
-                    html.Br(),
-                    dbc.Card(
-                        dcc.Graph(id='scatter_graph'), body=True
-                    )
-                ], width=12)
-            ], align='center')
+                    dbc.Row([
+                        html.P('Log', style={'paddingLeft': '150px', 'paddingRight': '8px', 'color': '#fff'}),
+                        radio_lin_log_vac
+                    ], style={'align': 'center'})
+                ], style={'width': '30%'}, className='slicerblue'),
+                html.Div([
+                    dcc.Graph(id='scatter_graph')
+                ], style={'width': '70%'}, className='graphblue')
+            ], style={'display': 'flex'})
         ])
 ], className='classTabs')
 
@@ -474,12 +475,12 @@ app.layout = html.Div([
         # Footer
         dbc.Row([
             dbc.Col([
-                html.A('Dataset', href="https://github.com/owid/covid-19-data/tree/master/public/data#%EF%B8%8F-download-our-complete-covid-19-dataset--csv--xlsx--json",
+                html.A('Dataset: Our World in Data', href="https://github.com/owid/covid-19-data/tree/master/public/data#%EF%B8%8F-download-our-complete-covid-19-dataset--csv--xlsx--json",
                 style={'fontWeight': 'bold', 'color': 'grey'})
             ], width=12, style={'textAlign': 'center'}),
             html.Br(),
             dbc.Col([
-                html.A('Group: Beatriz Gonçalves - m20210695, Gonçalo Lopes - m20210679, Guilherme Simões - m2021, '
+                html.A('Group: Beatriz Gonçalves - m20210695, Gonçalo Lopes - m20210679, Guilherme Simões - m20211003, '
                 'João Veloso - m20210696', style={'fontWeight': 'bold', 'color': 'grey'})
             ], width=12, style={'textAlign': 'center'}),
         ], style={'paddingTop': '30px', 'paddingBottom': '30px'}),
@@ -544,7 +545,12 @@ def new_cases(countries, scale):
         y_bar = df_bar['new_cases_per_million']
         data_bar.append(dict(type='scatter', x=x_bar, y=y_bar, name=country))
 
-    layout_linear = dict(yaxis=dict(title='New Cases Per Million', type=['linear', 'log'][scale]))
+    if len(scale):
+        layout_linear = dict(yaxis=dict(title='New Cases Per Million', type=['linear', 'log'][0]),
+            title=dict(text='New Cases Per Million from 2020 to 2022'))
+    else:
+        layout_linear = dict(yaxis=dict(title='New Cases Per Million', type=['linear', 'log'][1]),
+            title=dict(text='New Cases Per Million from 2020 to 2022'))
 
     return go.Figure(data=data_bar, layout=layout_linear)
 
@@ -588,10 +594,22 @@ def total_deaths(projection, scope):
 # Tests
 @app.callback(
     Output("tests_graph", "figure"),
-    [Input("tests_option", "value")]
+    [Input("tests_option", "value"), Input("plot_option", "value")]
 )
-def tests_plot(test):
-    fig = px.bar(df, x="continent", y=test, animation_frame="date", color="continent", hover_name="location")
+def tests_plot(test, plot):
+    fig = go.Figure()
+
+    if len(plot):
+        fig = px.bar(df, x="continent", y=test, animation_frame="date", color="continent", hover_name="location")
+    else:
+        fig = px.choropleth(df, 
+            locations = 'iso_code',
+            hover_name='location',
+            color=test, 
+            animation_frame="date",
+            color_continuous_scale=[(0, 'rgba(255,254,230,255)'), (0.5, 'rgba(0,69,40,255)'), (1.0, 'rgb(0,0,0)')],
+            projection="natural earth",
+            height=700)
     return fig
 
 
@@ -609,7 +627,11 @@ def plots(countries, vaccination, scale):
         y_scatter = df_scatter[vaccination]
         data_scatter.append(dict(type='scatter', x=x_scatter, y=y_scatter, name=country))
 
-    layout_scatter = dict(yaxis=dict(title=vaccination, type=['linear', 'log'][scale]))
+    if len(scale):
+        layout_scatter = dict(yaxis=dict(title=vaccination.replace('_', ' '), type=['linear', 'log'][0]))
+    else:
+        layout_scatter = dict(yaxis=dict(title=vaccination.replace('_', ' '), type=['linear', 'log'][1]))
+
     return go.Figure(data=data_scatter, layout=layout_scatter)
 
 
