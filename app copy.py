@@ -87,6 +87,14 @@ dropdown_continent_cases = dcc.Dropdown(
         persistence_type='session'
     )
 
+dropdown_scope = dcc.Dropdown(
+        id='scope_continent',
+        options=continent_options,
+        value='world',
+        persistence=True,
+        persistence_type='session'
+    )
+
 radio_lin_log_cases = dcc.RadioItems(
         id='lin_log_cases',
         options=[dict(label='Linear', value=0), dict(label='Log', value=1)],
@@ -192,6 +200,8 @@ choose_tab = dcc.Tabs([
                 dbc.Col([
                     html.H5('Which Projection?', style={'textAlign': 'center', 'color': colors["text"]}),
                     radio_projection,
+                    html.H5('Continent Choice', style={'textAlign': 'center', 'color': colors["text"]}),
+                    dropdown_scope,
                     html.H3('Total Covid-19 Cases', style={'textAlign': 'center', 'color': colors["text"]}),
                     dbc.Card(
                         dcc.Graph(id='total_cases_graph'), body=True
@@ -401,7 +411,7 @@ app.layout = html.Div([
             ], width=12, style={'textAlign': 'center'}),
             html.Br(),
             dbc.Col([
-                html.A('Group: Beatriz Gonçalves - m20210695, Gonçalo Lopes - m2021, Guilherme Simões - m2021, '
+                html.A('Group: Beatriz Gonçalves - m20210695, Gonçalo Lopes - m20210679, Guilherme Simões - m2021, '
                 'João Veloso - m20210696', style={'fontWeight': 'bold', 'color': 'grey'})
             ], width=12, style={'textAlign': 'center'}),
         ], style={'paddingTop': '30px', 'paddingBottom': '30px'}),
@@ -424,10 +434,12 @@ def render(pathname):
 # Cases
 @app.callback(
     Output("total_cases_graph", "figure"),
-    [Input("projection", "value")]
+    [Input("projection", "value"), Input("scope_continent", "value")]
 )
-def total_cases(projection):
-    fig = px.choropleth(df, 
+def total_cases(projection, scope):
+    
+    if scope == None:
+        fig = px.choropleth(df, 
         locations = 'iso_code',
         hover_name='location',
         #hover_data=['variant'],
@@ -435,10 +447,24 @@ def total_cases(projection):
         animation_frame="date",
         color_continuous_scale="YlOrRd",
         #locationmode='country names',
-        #scope="europe",
         projection=['equirectangular', 'orthographic'][projection],
         height=700)
+
+    else:
+        fig = px.choropleth(df, 
+        locations = 'iso_code',
+        hover_name='location',
+        #hover_data=['variant'],
+        color="total_cases", 
+        animation_frame="date",
+        color_continuous_scale="YlOrRd",
+        scope = scope.lower(),
+        #locationmode='country names',
+        projection=['equirectangular', 'orthographic'][projection],
+        height=700)
+
     return fig
+    
 
 @app.callback(
     Output("new_cases_graph", "figure"),
