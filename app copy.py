@@ -120,9 +120,9 @@ dropdown_scope = dcc.Dropdown(
 radio_lin_log_cases = dbc.Checklist(
         id='lin_log_cases',
         options=[dict(label='Linear', value=0)],
-        value=1,
+        value=[0],
         switch=True,
-        style={'textAlign': 'center'}
+        style={'textAlign': 'center', 'color': '#fff'}
     )
 
 radio_projection = dbc.Checklist(
@@ -250,20 +250,21 @@ choose_tab = dcc.Tabs([
                 ], style={'width': '70%'}, className='graphblue')
             ], style={'display': 'flex'}),
 
-            dbc.Row([
-                dbc.Col([
+            html.Div([
+                html.Div([
+                    dcc.Graph(id='new_cases_graph')
+                ], style={'width': '70%'}, className='graphblue'),
+                html.Div([
+                    html.Br(),
                     html.H5('Country Choice', style={'textAlign': 'center', 'color': colors["text"]}),
                     dropdown_country_cases,
                     html.Br(),
-                    html.H5('Linear or Log?', style={'textAlign': 'center', 'color': colors["text"]}),
-                    radio_lin_log_cases,
-                    html.Br(),
-                    html.H3('New Covid-19 Cases', style={'textAlign': 'center', 'color': colors["text"]}),
-                    dbc.Card(
-                        dcc.Graph(id='new_cases_graph'), body=True
-                    )
-                ], width=6),
-            ])
+                    dbc.Row([
+                        html.P('Log', style={'paddingRight': '5px', 'color': '#fff', 'textAlign': 'center'}),
+                        radio_lin_log_cases
+                    ], style={'alignItems': 'center'})#TODO
+                ], style={'width': '30%'}, className='slicerblue')
+            ], style={'display': 'flex'}),
         ]),
         dcc.Tab(label='Deaths', children=[
             html.Br(),html.Br(),
