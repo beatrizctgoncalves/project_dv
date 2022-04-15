@@ -60,7 +60,7 @@ def total_tests():
     fig = go.Figure(data=[go.Table(
         header=dict(values=list(['<br>Country', '<br>Total tests per 1000', 'Positives rate<br>       (%)', '<br>Total number of cases', '<br>Tests per case', '<br>Population size']),
                     line_color='darkslategray',
-                    fill_color='royalblue',
+                    fill_color='grey',
                     align=['left','center','center','center','center','center'],
                     font=dict(color='white', size=14),
                     height=20,
@@ -87,6 +87,7 @@ def vac_graph():
 
 # Cases
 continent_options = [dict(label=continent, value=continent) for continent in df['continent'].unique()]
+country_options = [dict(label=country, value=country) for country in df['location'].unique()]
 dropdown_continent_cases = dcc.Dropdown(
         id='continent_drop_cases',
         options=continent_options,
@@ -95,6 +96,13 @@ dropdown_continent_cases = dcc.Dropdown(
         persistence=True,
         persistence_type='session'
     )
+
+dropdown_country_cases = dcc.Dropdown(
+    id='country_drop_cases',
+    options=country_options,
+    value=['Portugal'],
+    multi=True
+)
 
 dropdown_scope = dcc.Dropdown(
         id='scope_continent',
@@ -218,8 +226,8 @@ choose_tab = dcc.Tabs([
                 ], width=6),
                 
                 dbc.Col([
-                    html.H5('Continent Choice', style={'textAlign': 'center', 'color': colors["text"]}),
-                    dropdown_continent_cases,
+                    html.H5('Country Choice', style={'textAlign': 'center', 'color': colors["text"]}),
+                    dropdown_country_cases,
                     html.Br(),
                     html.H5('Linear or Log?', style={'textAlign': 'center', 'color': colors["text"]}),
                     radio_lin_log_cases,
@@ -256,7 +264,7 @@ choose_tab = dcc.Tabs([
                 
                 dbc.Col([
                     html.H3('New Covid-19 Deaths', style={'textAlign': 'center', 'color': colors["text"]}),
-                    html.H5('Continent Choice', style={'textAlign': 'center', 'color': colors["text"]}),
+                    html.H5('Country Choice', style={'textAlign': 'center', 'color': colors["text"]}),
                     dropdown_country_deaths,
                     html.Br(),
                     html.H5('Deaths Choice', style={'textAlign': 'center', 'color': colors["text"]}),
@@ -482,16 +490,16 @@ def total_cases(projection, scope):
 
 @app.callback(
     Output("new_cases_graph", "figure"),
-    [Input("continent_drop_cases", "value"), Input("lin_log_cases", "value")]
+    [Input("country_drop_cases", "value"), Input("lin_log_cases", "value")]
 )
-def new_cases(continents, scale):
+def new_cases(countries, scale):
     data_bar = []
 
-    for continent in continents:
-        df_bar = df.loc[(df['continent'] == continent)]
+    for country in countries:
+        df_bar = df.loc[(df['location'] == country)]
         x_bar = df_bar['date']
         y_bar = df_bar['new_cases']
-        data_bar.append(dict(type='scatter', x=x_bar, y=y_bar, name=continent))
+        data_bar.append(dict(type='scatter', x=x_bar, y=y_bar, name=country))
 
     layout_linear = dict(yaxis=dict(title='New Cases Per Day', type=['linear', 'log'][scale]))
 
