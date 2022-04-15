@@ -117,7 +117,7 @@ dropdown_scope = dcc.Dropdown(
         persistence_type='session'
     )
 
-radio_lin_log_cases = dbc.Checklist(
+checklist_lin_log_cases = dbc.Checklist(
         id='lin_log_cases',
         options=[dict(label='Linear', value=0)],
         value=[0],
@@ -125,7 +125,7 @@ radio_lin_log_cases = dbc.Checklist(
         style={'textAlign': 'center', 'color': '#fff'}
     )
 
-radio_projection = dbc.Checklist(
+checklist_projection = dbc.Checklist(
         id='projection',
         options=[dict(label='Equirectangular', value=0)],
         value=[0],
@@ -143,12 +143,13 @@ dropdown_country_deaths = dcc.Dropdown(
         multi=True
     )
 
-radio_lin_log_deaths = dcc.RadioItems(
+checklist_lin_log_deaths = dbc.Checklist(
         id='lin_log_deaths',
-        options=[dict(label='Linear', value=0), dict(label='Log', value=1)],
-        value=0,
-        style={'textAlign': 'center'}
-    )
+        options=[dict(label='Linear', value=0)],
+        value=[0],
+        switch=True,
+        style={'textAlign': 'center', 'color': '#fff'}
+    ) 
 
 deaths_options_names = ['new_deaths_per_million', 'new_deaths_smoothed_per_million']
 deaths_options = [dict(label=deaths.replace('_', ' '), value=deaths) for deaths in deaths_options_names]
@@ -164,12 +165,12 @@ dropdown_scope2 = dcc.Dropdown(
         value='world'
     )
 
-radio_projection2 = dcc.RadioItems(
+checklist_projection2 = dbc.Checklist(
         id='projection2',
-        options=[dict(label='Equirectangular', value=0),
-                 dict(label='Orthographic', value=1)],
-        value=0,
-        style={'textAlign': 'center', 'margin': '10px'}
+        options=[dict(label='Equirectangular', value=0)],
+        value=[0],
+        switch=True,
+        style={'textAlign': 'center', 'color': '#fff'}
     )
 
 
@@ -241,7 +242,7 @@ choose_tab = dcc.Tabs([
                     html.H5('Which Projection?', style={'textAlign': 'center', 'color': colors["text"]}),
                     dbc.Row([
                         html.P('Orthographic', style={'paddingRight': '5px', 'color': '#fff'}),
-                        radio_projection
+                        checklist_projection
                     ], style={'alignItems': 'center'})#TODO
                 ], style={'width': '30%'}, className='slicerblue'),
             
@@ -261,8 +262,8 @@ choose_tab = dcc.Tabs([
                     html.Br(),
                     dbc.Row([
                         html.P('Log', style={'paddingRight': '5px', 'color': '#fff', 'textAlign': 'center'}),
-                        radio_lin_log_cases
-                    ], style={'alignItems': 'center'})#TODO
+                        checklist_lin_log_cases
+                    ], style={'alignItems': 'center'})
                 ], style={'width': '30%'}, className='slicerblue')
             ], style={'display': 'flex'}),
         ]),
@@ -289,7 +290,10 @@ choose_tab = dcc.Tabs([
                         dcc.Tab(label='World Map', children=[
                             html.Br(),
                             html.H5('Which Projection?', style={'textAlign': 'center', 'color': colors["text"]}),
-                            radio_projection2,
+                            dbc.Row([
+                                html.P('Orthographic', style={'paddingRight': '5px', 'color': '#fff'}),
+                                checklist_projection2
+                            ], style={'alignItems': 'center'}),
                             html.Br(),
                             html.H5('Continent Choice', style={'textAlign': 'center', 'color': colors["text"]}),
                             dropdown_scope2,
@@ -316,7 +320,10 @@ choose_tab = dcc.Tabs([
                     dropdown_deaths,
                     html.Br(),
                     html.H5('Linear or Log?', style={'textAlign': 'center', 'color': colors["text"]}),
-                    radio_lin_log_deaths,
+                    dbc.Row([
+                                html.P('Log', style={'paddingRight': '5px', 'color': '#fff'}),
+                                checklist_lin_log_deaths
+                            ], style={'alignItems': 'center'}),
                     dbc.Card(
                         dcc.Graph(id='new_deaths_graph'), body=True
                     )
@@ -563,7 +570,10 @@ def new_deaths(countries, scale, death):
         y_hist = df_hist[death]
         data_hist.append(dict(type='histogram', x=x_hist, y=y_hist, name=country))
 
-    layout_hist = dict(yaxis=dict(title=death, type=['linear', 'log'][scale]))
+    if len(scale):
+        layout_hist = dict(yaxis=dict(title=death, type=['linear', 'log'][0]))
+    else:
+        layout_hist = dict(yaxis=dict(title=death, type=['linear', 'log'][1]))
 
     return go.Figure(data=data_hist, layout=layout_hist)
 
@@ -572,16 +582,26 @@ def new_deaths(countries, scale, death):
     [Input("projection2", "value"), Input("scope_continent2", "value")]
 )
 def total_deaths(projection, scope):
-    fig = px.choropleth(df, 
-        locations = 'iso_code',
-        hover_name='location',
-        color="total_deaths",
-        animation_frame="date",
-        color_continuous_scale="amp",
-        scope = scope.lower(),
-        projection=['equirectangular', 'orthographic'][projection],
-        height=700)
-
+    if len(projection):
+        fig = px.choropleth(df, 
+            locations = 'iso_code',
+            hover_name='location',
+            color="total_deaths",
+            animation_frame="date",
+            color_continuous_scale="amp",
+            scope = scope.lower(),
+            projection=['equirectangular', 'orthographic'][0],
+            height=700)
+    else:
+        fig = px.choropleth(df, 
+            locations = 'iso_code',
+            hover_name='location',
+            color="total_deaths",
+            animation_frame="date",
+            color_continuous_scale="amp",
+            scope = scope.lower(),
+            projection=['equirectangular', 'orthographic'][1],
+            height=700)
     return fig
 
 
