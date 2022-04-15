@@ -3,6 +3,7 @@ import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output, State
+from matplotlib import animation
 import numpy as np
 import pandas as pd
 import plotly.graph_objs as go
@@ -97,7 +98,8 @@ radio_projection = dcc.RadioItems(
         id='projection',
         options=[dict(label='Equirectangular', value=0),
                  dict(label='Orthographic', value=1)],
-        value=0
+        value=0,
+        style={'textAlign': 'center'}
     )
 
 
@@ -125,6 +127,24 @@ dropdown_deaths = dcc.Dropdown(
         value='new_deaths_per_million',
     )
 
+
+# Tests
+dropdown_country_tests = dcc.Dropdown(
+        id='country_drop_tests',
+        options=country_options,
+        value=['Portugal', 'France', 'Spain', 'Italy'],
+        multi=True
+    )
+
+tests_options_names = ['total_tests', 'new_tests', 'total_tests_per_thousand', 'new_tests_per_thousand',
+       'new_tests_smoothed', 'new_tests_smoothed_per_thousand', 'positive_rate', 'tests_per_case', 'tests_units']
+tests_options = [dict(label=tests.replace('_', ' '), value=tests) for tests in tests_options_names]
+dropdown_tests = dcc.Dropdown(
+        id='tests_option',
+        options=tests_options,
+        value='total_tests'
+    )
+    
 
 # Vaccinations
 country_options = [dict(label=country, value=country) for country in df['location'].unique()]
@@ -254,14 +274,27 @@ choose_tab = dcc.Tabs([
                     )
                 ], width=12)
             ]),
+            html.Br(),html.Br(),
+            
             dbc.Row([
-                ''' SOMETHING
                 dbc.Col([
-                    html.H3('New Covid-19 Deaths', style={'textAlign': 'center', 'color': colors["text"]}),
+                    html.H5('Continent Choice', style={'textAlign': 'center', 'color': colors["text"]}),
+                    dropdown_country_tests
+                ], width=6),
+                dbc.Col([
+                    html.H5('Test Choice', style={'textAlign': 'center', 'color': colors["text"]}),
+                    dropdown_tests
+                ], width=6),
+            ]),
+            html.Br(),
+            dbc.Row([
+                dbc.Col([#TODO
+                    html.H3('Tests', style={'textAlign': 'center', 'color': colors["text"]}),
+                    #html.Br(),
                     dbc.Card(
-                        dcc.Graph(figure=new_deaths()), body=True
+                        dcc.Graph(id='tests_graph'), body=True
                     )
-                ], width=6),'''
+                ], width=12),
             ])
         ]),
         dcc.Tab(label='Vaccinations', children=[
@@ -297,28 +330,46 @@ choose_tab = dcc.Tabs([
                     html.H5('Linear or Log?', style={'textAlign': 'center', 'color': colors["text"]}),
                     radio_lin_log_vac,
                     dbc.Card(
-                        dcc.Graph(id='bar_graph'), body=True
+                        dcc.Graph(id='scatter_graph'), body=True
                     )
                 ], width=12)
             ], align='center')
         ])
 ])
 
+# Navbar
+nav_home = dbc.NavItem(dbc.NavLink("Informations about Covid-19", href="/", active="exact"))
 
 # Layout
 content = html.Div(id="page-content")
 
 app.layout = html.Div([
-    html.Br(), html.Br(),
-    
+    dbc.Navbar(
+        dbc.Container([
+            html.A(
+                dbc.Row(
+                    [
+                        dbc.Col(html.Img(src=COVID_LOGO, height="80px", className="ml-2")),
+                    ],
+                    align="center"
+                ),
+                href="/",
+            ),
+            dbc.NavbarToggler(id="navbar-toggler2"),
+            dbc.Collapse(
+                dbc.Nav(
+                    [nav_home], className="ml-auto", navbar=True
+                ),
+                id="navbar-collapse2",
+                navbar=True
+            ),
+        ], fluid=True),
+        color=colors["nav"],
+        dark=True,
+        className="mb-3",
+    ),
     dbc.Container([
         dbc.Row([
-            dbc.Col([
-                html.A(
-                    dbc.Col(html.Img(src=COVID_LOGO, height="80px", className="ml-2"), style={'textAlign': 'center'}),  
-                    href="/",
-                )
-            ], width=12),
             dbc.Col([
                 html.H1('Covid-19', style={'textAlign': 'center', 'color': colors["nav"]})
             ], width=12)
@@ -355,7 +406,20 @@ app.layout = html.Div([
             ], width=12, style={'textAlign': 'center'}),
         ], style={'paddingTop': '30px', 'paddingBottom': '30px'}),
     ], fluid=True)
-])
+], style={'backgroundColor': colors['background']})
+
+# Navbar
+@app.callback(Output("page-content", "children"), [Input("url", "pathname")])
+def render(pathname):
+    if pathname != "/":
+        return dbc.Jumbotron(
+            [
+                html.H1("Error 404: Page not found", className="text-danger"),
+                html.Hr(),
+                html.P("The page " + pathname + " was not fount...")
+            ]
+        )
+
 
 # Cases
 @app.callback(
@@ -364,17 +428,16 @@ app.layout = html.Div([
 )
 def total_cases(projection):
     fig = px.choropleth(df, 
-              locations = 'iso_code',
-              hover_name='location',
-              #hover_data=['variant'],
-              color="total_cases", 
-              animation_frame="date",
-              color_continuous_scale="YlOrRd",
-              #locationmode='country names',
-              #scope="europe",
-              title='Cases of Covid-19',
-              projection=['equirectangular', 'orthographic'][projection],
-              height=700)
+        locations = 'iso_code',
+        hover_name='location',
+        #hover_data=['variant'],
+        color="total_cases", 
+        animation_frame="date",
+        color_continuous_scale="YlOrRd",
+        #locationmode='country names',
+        #scope="europe",
+        projection=['equirectangular', 'orthographic'][projection],
+        height=700)
     return fig
 
 @app.callback(
@@ -391,7 +454,7 @@ def new_cases(continents, scale):
         data_bar.append(dict(type='scatter', x=x_bar, y=y_bar, name=continent))
 
     layout_linear = dict(yaxis=dict(title='New Cases Per Day', type=['linear', 'log'][scale]),
-                  paper_bgcolor='#f9f9f9'
+                  paper_bgcolor=colors['background']
                   )
 
     return go.Figure(data=data_bar, layout=layout_linear)
@@ -411,15 +474,44 @@ def new_deaths(countries, scale, death):
         data_hist.append(dict(type='histogram', x=x_hist, y=y_hist, name=country))
 
     layout_hist = dict(yaxis=dict(title=death, type=['linear', 'log'][scale]),
-                  paper_bgcolor='#f9f9f9'
+                  paper_bgcolor=colors['background']
                   )
 
     return go.Figure(data=data_hist, layout=layout_hist)
 
 
+# Tests
+@app.callback(
+    Output("tests_graph", "figure"),
+    [Input("country_drop_tests", "value"), Input("tests_option", "value")]
+)
+def tests_plot(countries, test):
+    data_hist = []
+    x_hist = 0
+    y_hist = 0
+
+    for country in countries:
+        df_hist = df.loc[(df['location'] == test)]
+        x_hist = df_hist['date']
+        y_hist = df_hist['total_tests']
+        #data_hist.append(dict(type='bar', x=x_hist, y=y_hist, name=country))
+
+    #layout_hist = dict(yaxis=dict(title=test, type=['linear', 'log'][0]))
+    fig = px.line(df_hist, 
+        x='date',
+        y='total_tests',
+        color="total_tests",
+        animation_frame="date",
+        #color_continuous_scale="YlOrRd",
+        markers=True,
+       # projection=['equirectangular', 'orthographic'][projection],
+        height=700)
+    return fig
+
+
 # Vaccinations
 @app.callback(
-    Output('bar_graph', 'figure'),
+    Output('scatter_graph', 'figure'),
     [Input("country_drop", "value"), Input("vaccination_option", "value"), Input("lin_log_vac", "value")]
 )
 def plots(countries, vaccination, scale):
@@ -433,7 +525,7 @@ def plots(countries, vaccination, scale):
 
     layout_scatter = dict(title=dict(text='Total Vaccination from 2020 until 2022'),
                   yaxis=dict(title='Vaccination', type=['linear', 'log'][scale]),
-                  paper_bgcolor='#f9f9f9'
+                  paper_bgcolor=colors['background']
                   )
 
     return go.Figure(data=data_scatter, layout=layout_scatter)
