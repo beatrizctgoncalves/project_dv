@@ -10,6 +10,7 @@ import pandas as pd
 import plotly.express as px
 import numpy as np
 from raceplotly.plots import barplot
+from dash import dash_table
 
 
 # Datasets
@@ -35,7 +36,6 @@ colors = {
 
 COVID_LOGO = "assets/favicon.ico"
 
-# Interactive Components
 # Deaths
 def total_deaths():
     df_tmp = df[df['total_cases'].notna() & df['total_deaths'].notna()]
@@ -47,36 +47,6 @@ def total_deaths():
 
     return fig
 
-# Tests
-def total_tests():
-    df_tests = df.dropna(subset=['positive_rate','tests_per_case','total_tests_per_thousand', 'total_cases'])
-    df_tests.sort_values(by = ['total_tests'], ascending=False, inplace=True)
-    df_tests.reset_index(drop=True, inplace=True)
-    df_table = df_tests.groupby(['continent', 'location']).agg({'total_tests_per_thousand': 'mean', 'positive_rate': 'mean', 'total_cases':'mean', 'tests_per_case':'mean', 'population':'mean'}).reset_index()
-    
-    rowEvenColor = 'lightgrey'
-    rowOddColor = 'white'
-
-    fig = go.Figure(data=[go.Table(
-        header=dict(values=list(['<br>Country', '<br>Total tests per 1000', 'Positives rate<br>       (%)', '<br>Total number of cases', '<br>Tests per case', '<br>Population size']),
-                    line_color='darkslategray',
-                    fill_color='grey',
-                    align=['left','center','center','center','center','center'],
-                    font=dict(color='white', size=14),
-                    height=20,
-                    ),
-        cells=dict(values=[df_table.location, round(df_table.total_tests_per_thousand), (round(df_table.positive_rate * 100)), round(df_table.total_cases), round(df_table.tests_per_case), round(df_table.population)],
-                line_color='darkslategray',
-                fill_color = [[rowOddColor,rowEvenColor,rowOddColor, rowEvenColor,rowOddColor, rowEvenColor]*100],
-                font=dict(color='black', size=11),
-                align=['left','center'])
-        )])
-    fig.update_layout(
-        showlegend=False,
-        title_text="Data on Testing for Covid-19 in all",
-    )
-    return fig
-
 # Vaccination
 def vac_graph():
     mask = (df['date'] > '2021-01-01') & (df['date'] <= '2022-04-10')
@@ -85,7 +55,7 @@ def vac_graph():
     my_raceplot.plot(item_label = 'Top Country', value_label = 'Vaccinations per 100 people', frame_duration = 600)
     return my_raceplot.fig
 
-
+######## Interactive Components
 # Cases
 continent_options = [dict(label=continent, value=continent) for continent in df['continent'].unique()]
 country_options = [dict(label=country, value=country) for country in df['location'].unique()]
@@ -175,6 +145,42 @@ radio_projection2 = dbc.RadioItems(
 
 
 # Tests
+df_tests = df.dropna(subset=['positive_rate','tests_per_case','total_tests_per_thousand', 'total_cases'])
+df_tests.sort_values(by = ['total_tests'], ascending=False, inplace=True)
+df_tests.reset_index(drop=True, inplace=True)
+df_table = df_tests.groupby(['continent', 'location']).agg({'total_tests_per_thousand': 'mean', 'positive_rate': 'mean', 'total_cases':'mean', 'tests_per_case':'mean', 'population':'mean'}).reset_index()
+df_table['total_tests_per_thousand'] = round(df_table.total_tests_per_thousand)
+df_table['positive_rate'] = round(df_table.positive_rate * 100)
+df_table['total_cases'] = round(df_table.total_cases)
+df_table['tests_per_case'] = round(df_table.tests_per_case)
+df_table['population'] = round(df_table.population)
+
+df_table.rename(columns={'continent': 'Continent', 'location': 'Country', 'total_tests_per_thousand': 'Total tests per 1000', 
+    'positive_rate': 'Positives rate (%)', 'total_cases': 'Total number of cases', 'tests_per_case': 'Tests per case',
+    'population': 'Population size'}, inplace=True)
+
+table = dash_table.DataTable(
+    id='table_id',
+    columns=[
+        {'name': i, 'id': i, 'deletable': True} for i in df_table.columns
+        # omit the id column
+        if i != 'id'
+    ],
+    data=df_table.to_dict('records'),
+    editable=True,
+    filter_action="native",
+    sort_action="native",
+    sort_mode='multi',
+    selected_rows=[],
+    page_action='native',
+    page_current= 0,
+    page_size= 10,
+    style_data={
+        'whiteSpace': 'normal',
+        'height': 'auto'
+    }
+)
+
 dropdown_continent_tests = dcc.Dropdown(
         id='scope_tests',
         options=continent_options2,
@@ -313,8 +319,8 @@ choose_tab = dcc.Tabs([
 
             html.Div([
                 html.Div([
-                    dcc.Graph(figure=total_tests())
-                ], style={'width': '100%', 'height': '480px'}, className='slicerblue'),
+                    table
+                ], style={'width': '100%', 'height': '440px'}, className='slicerblue'),
             ], style={'display': 'flex'}),
 
             html.Div([
@@ -330,6 +336,8 @@ choose_tab = dcc.Tabs([
                 ], style={'width': '70%'}, className='graphblue'),
             ], style={'display': 'flex'})
         ]),
+
+        # Vaccinations
         dcc.Tab(label='Vaccinations', children=[
             html.Br(),html.Br(),
 
