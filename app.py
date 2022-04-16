@@ -142,7 +142,7 @@ dropdown_country_deaths = dcc.Dropdown(
         multi=True
     )
 
-radio_lin_log_deaths = dbc.Checklist(
+radio_lin_log_deaths = dbc.RadioItems(
         id='lin_log_deaths',
         options=[dict(label='Linear', value=0), dict(label='Log', value=1)],
         value=0,
@@ -165,7 +165,7 @@ dropdown_scope2 = dcc.Dropdown(
         placeholder='World'
     )
 
-radio_projection2 = dbc.Checklist(
+radio_projection2 = dbc.RadioItems(
         id='projection2',
         options=[dict(label='Equirectangular', value=0), dict(label='Orthographic', value=1)],
         value=0,
