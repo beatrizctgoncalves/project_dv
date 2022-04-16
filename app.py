@@ -124,10 +124,10 @@ checklist_lin_log_cases = dbc.Checklist(
         style={'textAlign': 'center', 'color': '#fff'}
     )
 
-checklist_projection = dbc.Checklist(
+radio_projection = dbc.RadioItems(
         id='projection',
-        options=[dict(label='Equirectangular', value=0)],
-        value=[0],
+        options=[dict(label='Equirectangular', value=0), dict(label='Orthographic', value=1)],
+        value=0,
         switch=True,
         style={'textAlign': 'center', 'color': '#fff'}
     )
@@ -236,11 +236,12 @@ choose_tab = dcc.Tabs([
 
             html.Div([
                 html.Div([
+                    html.Br(),html.Br(),
                     html.H5('Continent Choice', style={'textAlign': 'center', 'color': colors["text"]}),
                     dropdown_scope,
-                    html.Br(),
-                    html.H5('Orthographic or Equirectangular?', style={'textAlign': 'center', 'color': colors["text"]}),
-                    checklist_projection
+                    html.Br(),html.Br(),
+                    html.H5('Which Projection?', style={'textAlign': 'center', 'color': colors["text"]}),
+                    radio_projection
                 ], style={'width': '30%'}, className='slicerblue'),
             
                 html.Div([
@@ -471,28 +472,16 @@ def render(pathname):
     [Input("projection", "value"), Input("scope_continent", "value")]
 )
 def total_cases(projection, scope):
-    if len(projection):
-        fig = px.choropleth(df, 
-            locations = 'iso_code',
-            hover_name='location',
-            color="total_cases", 
-            animation_frame="date",
-            color_continuous_scale="YlOrRd",
-            scope = scope.lower(),
-            title='Total Covid-19 Cases',
-            projection=['equirectangular', 'orthographic'][0],
-            height=700)
-    else:
-        fig = px.choropleth(df, 
-            locations = 'iso_code',
-            hover_name='location',
-            color="total_cases", 
-            animation_frame="date",
-            color_continuous_scale="YlOrRd",
-            scope = scope.lower(),
-            title='Total Covid-19 Cases',
-            projection=['equirectangular', 'orthographic'][1],
-            height=700)
+    fig = px.choropleth(df, 
+        locations = 'iso_code',
+        hover_name='location',
+        color="total_cases",
+        animation_frame="date",
+        color_continuous_scale="YlOrRd",
+        scope = scope.lower(),
+        title='Total Covid-19 Cases',
+        projection=['equirectangular', 'orthographic'][projection],
+        height=700)
 
     return fig
     

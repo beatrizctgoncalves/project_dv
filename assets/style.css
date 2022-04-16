@@ -7,15 +7,13 @@
   
   .slicerblue {
     width: 50px;
-    height: 300px;
+    height: 350px;
     border-radius: 5px;
     background-color: #4B5B81;
     margin: 10px;
     padding: 15px;
     box-shadow: -1px 1px 9px 7px lightgrey;
     align-items: center;
-    align-content: center;
-    vertical-align: middle;
   }
   .graphblue{
     border-radius: 5px;
@@ -47,13 +45,9 @@
     text-align: justify;
     padding-left: 20px;
     padding-right: 20px;
-    padding-top: 20px;
-    margin-bottom: 0.5rem;
     font-weight: 500;
     line-height: 1.2;
     display: block;
-    margin-block-start: 1.67em;
-    margin-block-end: 1.67em;
     margin-inline-start: 0px;
     margin-inline-end: 0px;
   }
