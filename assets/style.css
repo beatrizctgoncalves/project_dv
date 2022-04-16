@@ -40,9 +40,3 @@
     word-spacing: -1.2px;
     font-weight: 400;
   }
-  
-  @media (max-width: 900px) {
-    .row {
-      display: block;
-    }
-  }

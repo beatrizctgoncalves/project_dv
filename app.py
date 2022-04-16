@@ -13,7 +13,7 @@ from raceplotly.plots import barplot
 
 
 # Datasets
-df = pd.read_csv('datasets/owid-covid-data.csv')
+df = pd.read_csv('dataset/owid-covid-data.csv')
 df = df.dropna(how='all')
 df = df[df['continent'].notna()]
 mask = (df['date'] > '2020-02-23') & (df['date'] <= '2022-04-12')
