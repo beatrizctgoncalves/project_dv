@@ -116,10 +116,10 @@ dropdown_scope = dcc.Dropdown(
         placeholder='World'
     )
 
-checklist_lin_log_cases = dbc.Checklist(
+radio_lin_log_cases = dbc.RadioItems(
         id='lin_log_cases',
-        options=[dict(label='Linear', value=0)],
-        value=[0],
+        options=[dict(label='Linear', value=0), dict(label='Log', value=1)],
+        value=0,
         switch=True,
         style={'textAlign': 'center', 'color': '#fff'}
     )
@@ -142,10 +142,10 @@ dropdown_country_deaths = dcc.Dropdown(
         multi=True
     )
 
-checklist_lin_log_deaths = dbc.Checklist(
+radio_lin_log_deaths = dbc.Checklist(
         id='lin_log_deaths',
-        options=[dict(label='Linear', value=0)],
-        value=[0],
+        options=[dict(label='Linear', value=0), dict(label='Log', value=1)],
+        value=0,
         switch=True,
         style={'textAlign': 'center', 'color': '#fff'}
     ) 
@@ -165,10 +165,10 @@ dropdown_scope2 = dcc.Dropdown(
         placeholder='World'
     )
 
-checklist_projection2 = dbc.Checklist(
+radio_projection2 = dbc.Checklist(
         id='projection2',
-        options=[dict(label='Equirectangular', value=0)],
-        value=[0],
+        options=[dict(label='Equirectangular', value=0), dict(label='Orthographic', value=1)],
+        value=0,
         switch=True,
         style={'textAlign': 'center', 'color': '#fff'}
     )
@@ -190,7 +190,14 @@ dropdown_tests = dcc.Dropdown(
         options=tests_options,
         value='total_tests_per_thousand'
     )
-    
+
+choose_plot = dbc.RadioItems(
+        id='plot_option',
+        options=[dict(label='Bar Chart', value=0), dict(label='World Map', value=1)],
+        value=0,
+        switch=True,
+        style={'textAlign': 'center', 'color': '#fff'}
+    )
 
 # Vaccinations
 country_options = [dict(label=country, value=country) for country in df['location'].unique()]
@@ -210,20 +217,10 @@ dropdown_vaccination = dcc.Dropdown(
         value='total_vaccinations',
     )
 
-radio_lin_log_vac = dbc.Checklist(
+radio_lin_log_vac = dbc.RadioItems(
         id='lin_log_vac',
-        options=[dict(label='Linear', value=0)],
-        value=[0],
-        switch=True,
-        style={'textAlign': 'center', 'color': '#fff'}
-    )
-
-
-# Graphics
-choose_plot = dbc.Checklist(
-        id='plot_option',
-        options=[dict(label='Bar Chart', value=0)],
-        value=[0],
+        options=[dict(label='Linear', value=0), dict(label='Log', value=1)],
+        value=0,
         switch=True,
         style={'textAlign': 'center', 'color': '#fff'}
     )
@@ -258,10 +255,7 @@ choose_tab = dcc.Tabs([
                     html.H5('Country Choice', style={'textAlign': 'center', 'color': colors["text"]}),
                     dropdown_country_cases,
                     html.Br(),html.Br(),
-                    dbc.Row([
-                        html.P('Log', style={'paddingLeft': '150px', 'paddingRight': '8px', 'color': '#fff'}),
-                        checklist_lin_log_cases
-                    ])
+                    radio_lin_log_cases
                 ], style={'width': '30%'}, className='slicerblue')
             ], style={'display': 'flex'})
         ]),
@@ -282,10 +276,7 @@ choose_tab = dcc.Tabs([
                             html.H5('Continent Choice', style={'textAlign': 'center', 'color': colors["text"]}),
                             dropdown_scope2,
                             html.Br(),html.Br(),
-                            dbc.Row([
-                                html.P('Orthographic', style={'paddingLeft': '80px', 'paddingRight': '8px', 'color': '#fff'}),
-                                checklist_projection2
-                            ])
+                            radio_projection2
                         ], style={'width': '30%'}, className='slicerblue')
                     ], style={'display': 'flex'})
                 ]),
@@ -308,10 +299,7 @@ choose_tab = dcc.Tabs([
                     html.H5('Options', style={'textAlign': 'center', 'color': colors["text"]}),
                     dropdown_deaths,
                     html.Br(),
-                    dbc.Row([
-                        html.P('Log', style={'paddingLeft': '150px', 'paddingRight': '8px', 'color': '#fff'}),
-                        checklist_lin_log_deaths
-                    ])
+                    radio_lin_log_deaths
                 ], style={'width': '30%'}, className='slicerblue'),
                 html.Div([
                     dcc.Graph(id='new_deaths_graph')
@@ -335,10 +323,7 @@ choose_tab = dcc.Tabs([
                     html.H5('Options to visualize', style={'textAlign': 'center', 'color': colors["text"]}),
                     dropdown_tests,
                     html.Br(),html.Br(),
-                    dbc.Row([
-                        html.P('World Map', style={'paddingLeft': '100px', 'paddingRight': '8px', 'color': '#fff'}),
-                        choose_plot
-                    ], style={'align': 'center'})#TODO
+                    choose_plot
                 ], style={'width': '30%'}, className='slicerblue'),
                 html.Div([
                     dcc.Graph(id='tests_graph')
@@ -363,10 +348,7 @@ choose_tab = dcc.Tabs([
                     html.H5('Options', style={'textAlign': 'center', 'color': colors["text"]}),
                     dropdown_vaccination,
                     html.Br(),
-                    dbc.Row([
-                        html.P('Log', style={'paddingLeft': '150px', 'paddingRight': '8px', 'color': '#fff'}),
-                        radio_lin_log_vac
-                    ], style={'align': 'center'})
+                    radio_lin_log_vac
                 ], style={'width': '30%'}, className='slicerblue'),
                 html.Div([
                     dcc.Graph(id='scatter_graph')
@@ -376,7 +358,7 @@ choose_tab = dcc.Tabs([
 ], className='classTabs')
 
 # Navbar
-nav_home = dbc.NavItem(dbc.NavLink("Informations about Covid-19", href="/", active="exact"))
+nav_home = dbc.NavItem(dbc.NavLink("Informations about Covid-19", href="/", active="exact"), style={'align': 'right'})
 
 # Layout
 content = html.Div(id="page-content")
@@ -499,12 +481,8 @@ def new_cases(countries, scale):
         y_bar = df_bar['new_cases_per_million']
         data_bar.append(dict(type='scatter', x=x_bar, y=y_bar, name=country, mode='lines'))
 
-    if len(scale):
-        layout_linear = dict(yaxis=dict(title='New Cases Per Million', type=['linear', 'log'][0]),
-            title=dict(text='New Cases Per Million from 2020 to 2022'))
-    else:
-        layout_linear = dict(yaxis=dict(title='New Cases Per Million', type=['linear', 'log'][1]),
-            title=dict(text='New Cases Per Million from 2020 to 2022'))
+    layout_linear = dict(yaxis=dict(title='New Cases Per Million', type=['linear', 'log'][scale]),
+        title=dict(text='New Cases Per Million from 2020 to 2022'))
 
     return go.Figure(data=data_bar, layout=layout_linear)
 
@@ -523,10 +501,7 @@ def new_deaths(countries, scale, death):
         y_sc = df_sc[death]
         data_sc.append(dict(type='scatter', x=x_sc, y=y_sc, name=country, mode='lines'))
 
-    if len(scale):
-        layout_sc = dict(yaxis=dict(title=death.replace('_', ' '), type=['linear', 'log'][0]))
-    else:
-        layout_sc = dict(yaxis=dict(title=death.replace('_', ' '), type=['linear', 'log'][1]))
+    layout_sc = dict(yaxis=dict(title=death.replace('_', ' '), type=['linear', 'log'][scale]))
 
     return go.Figure(data=data_sc, layout=layout_sc)
 
@@ -535,26 +510,15 @@ def new_deaths(countries, scale, death):
     [Input("projection2", "value"), Input("scope_continent2", "value")]
 )
 def total_deaths(projection, scope):
-    if len(projection):
-        fig = px.choropleth(df, 
-            locations = 'iso_code',
-            hover_name='location',
-            color="total_deaths",
-            animation_frame="date",
-            color_continuous_scale="amp",
-            scope = scope.lower(),
-            projection=['equirectangular', 'orthographic'][0],
-            height=700)
-    else:
-        fig = px.choropleth(df, 
-            locations = 'iso_code',
-            hover_name='location',
-            color="total_deaths",
-            animation_frame="date",
-            color_continuous_scale="amp",
-            scope = scope.lower(),
-            projection=['equirectangular', 'orthographic'][1],
-            height=700)
+    fig = px.choropleth(df, 
+        locations = 'iso_code',
+        hover_name='location',
+        color="total_deaths",
+        animation_frame="date",
+        color_continuous_scale="amp",
+        scope = scope.lower(),
+        projection=['equirectangular', 'orthographic'][projection],
+        height=700)
     return fig
 
 
@@ -564,9 +528,7 @@ def total_deaths(projection, scope):
     [Input("tests_option", "value"), Input("plot_option", "value")]
 )
 def tests_plot(test, plot):
-    fig = go.Figure()
-
-    if len(plot):
+    if plot == 0:
         fig = px.bar(df, x="continent", y=test, animation_frame="date", color="continent", hover_name="location")
     else:
         fig = px.choropleth(df, 
@@ -594,11 +556,8 @@ def plots(countries, vaccination, scale):
         y_scatter = df_scatter[vaccination]
         data_scatter.append(dict(type='scatter', x=x_scatter, y=y_scatter, name=country, mode='lines'))
 
-    if len(scale):
-        layout_scatter = dict(yaxis=dict(title=vaccination.replace('_', ' '), type=['linear', 'log'][0]))
-    else:
-        layout_scatter = dict(yaxis=dict(title=vaccination.replace('_', ' '), type=['linear', 'log'][1]))
-
+    layout_scatter = dict(yaxis=dict(title=vaccination.replace('_', ' '), type=['linear', 'log'][scale]))
+    
     return go.Figure(data=data_scatter, layout=layout_scatter)
 
 
