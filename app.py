@@ -23,7 +23,7 @@ mask = (df['date'] > '2020-02-23') & (df['date'] <= '2022-04-12')
 df = df.loc[mask]
 
 # To be responsive
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
+app = dash.Dash(__name__, external_stylesheets=[''])
 
 server = app.server
 
@@ -366,7 +366,7 @@ choose_tab = dcc.Tabs([
                     html.H5('Country Choice', style={'textAlign': 'center', 'color': colors["text"]}),
                     dropdown_country,
                     html.Br(),
-                    html.H5('Vaccination Choice', style={'textAlign': 'center', 'color': colors["text"]}),
+                    html.H5('Options', style={'textAlign': 'center', 'color': colors["text"]}),
                     dropdown_vaccination,
                     html.Br(),
                     dbc.Row([
@@ -415,7 +415,7 @@ app.layout = html.Div([
     dbc.Container([
         dbc.Row([
             dbc.Col([
-                html.H1('Covid-19', style={'textAlign': 'center', 'color': colors["nav"]})
+                html.H1('What do we know about Covid-19?', style={'textAlign': 'center', 'color': colors["nav"]})
             ], width=12)
         ]),
         dbc.Row([
@@ -425,6 +425,13 @@ app.layout = html.Div([
                 'infections, such as pneumonia. This virus was first identified in humans in late '
                 '2019 in the Chinese city of Wuhan, Hubei province, and cases have been confirmed '
                 'in other countries.', style={'textAlign': 'justify', 'paddingLeft': '20px', 'paddingRight': '20px',
+                'paddingTop': '20px'}),
+                
+                html.H5("This pandemic has spread rapidly around the world, having a major impact on people's "
+                'lives. Consequently, information about it has been growing, creating a lot of misinformation. '
+                'Therefore, this dashboard seeks to make sense of the current pandemic data in order to better '
+                'understand its impact on each country and continent.',
+                style={'textAlign': 'justify', 'paddingLeft': '20px', 'paddingRight': '20px',
                 'paddingTop': '20px'})
             ], width=12)
         ], align='justify'),
@@ -508,7 +515,7 @@ def new_cases(countries, scale):
         df_bar = df.loc[(df['location'] == country)]
         x_bar = df_bar['date']
         y_bar = df_bar['new_cases_per_million']
-        data_bar.append(dict(type='scatter', x=x_bar, y=y_bar, name=country))
+        data_bar.append(dict(type='scatter', x=x_bar, y=y_bar, name=country, mode='lines'))
 
     if len(scale):
         layout_linear = dict(yaxis=dict(title='New Cases Per Million', type=['linear', 'log'][0]),
@@ -526,20 +533,20 @@ def new_cases(countries, scale):
     [Input("country_drop_deaths", "value"), Input("lin_log_deaths", "value"), Input('deaths_option', "value")]
 )
 def new_deaths(countries, scale, death):
-    data_hist = []
+    data_sc = []
 
     for country in countries:
-        df_hist = df.loc[(df['location'] == country)]
-        x_hist = df_hist['date']
-        y_hist = df_hist[death]
-        data_hist.append(dict(type='histogram', x=x_hist, y=y_hist, name=country))
+        df_sc = df.loc[(df['location'] == country)]
+        x_sc = df_sc['date']
+        y_sc = df_sc[death]
+        data_sc.append(dict(type='scatter', x=x_sc, y=y_sc, name=country, mode='lines'))
 
     if len(scale):
-        layout_hist = dict(yaxis=dict(title=death, type=['linear', 'log'][0]))
+        layout_sc = dict(yaxis=dict(title=death.replace('_', ' '), type=['linear', 'log'][0]))
     else:
-        layout_hist = dict(yaxis=dict(title=death, type=['linear', 'log'][1]))
+        layout_sc = dict(yaxis=dict(title=death.replace('_', ' '), type=['linear', 'log'][1]))
 
-    return go.Figure(data=data_hist, layout=layout_hist)
+    return go.Figure(data=data_sc, layout=layout_sc)
 
 @app.callback(
     Output("total_deaths_graph", "figure"),
@@ -603,7 +610,7 @@ def plots(countries, vaccination, scale):
         df_scatter = df.loc[(df['location'] == country)]
         x_scatter = df_scatter['date']
         y_scatter = df_scatter[vaccination]
-        data_scatter.append(dict(type='scatter', x=x_scatter, y=y_scatter, name=country))
+        data_scatter.append(dict(type='scatter', x=x_scatter, y=y_scatter, name=country, mode='lines'))
 
     if len(scale):
         layout_scatter = dict(yaxis=dict(title=vaccination.replace('_', ' '), type=['linear', 'log'][0]))
