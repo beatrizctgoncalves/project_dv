@@ -236,10 +236,9 @@ choose_tab = dcc.Tabs([
 
             html.Div([
                 html.Div([
-                    html.Br(),
                     html.H5('Continent Choice', style={'textAlign': 'center', 'color': colors["text"]}),
                     dropdown_scope,
-                    html.Br(),html.Br(),
+                    html.Br(),
                     html.H5('Which Projection?', style={'textAlign': 'center', 'color': colors["text"]}),
                     dbc.Row([
                         html.P('Orthographic', style={'paddingLeft': '80px', 'paddingRight': '8px', 'color': '#fff'}),

@@ -56,7 +56,26 @@
     margin-block-end: 1.67em;
     margin-inline-start: 0px;
     margin-inline-end: 0px;
-    font-weight: bold;
   }
 
-  
+  .custom-control-label {
+    position: relative;
+    margin-bottom: 0;
+    vertical-align: top;
+  }
+
+  @media (min-width: 768px) {
+    .navbar-expand-md .navbar-nav .nav-link {
+      padding-right: 0.5rem;
+      padding-left: 0.5rem;
+    }
+  }
+
+  .nav-link {
+    display: block;
+    padding: 0.5rem 1rem;
+}
+
+li {
+  text-align: -webkit-match-parent;
+}
