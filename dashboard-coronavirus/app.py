@@ -20,7 +20,7 @@ mask = (df['date'] > '2020-02-23') & (df['date'] <= '2022-04-12')
 df = df.loc[mask]
 
 # To be responsive
-app = dash.Dash(__name__, external_stylesheets=[''])
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 server = app.server
 
