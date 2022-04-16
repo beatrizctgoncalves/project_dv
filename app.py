@@ -73,9 +73,10 @@ def total_tests():
                 fill_color = [[rowOddColor,rowEvenColor,rowOddColor, rowEvenColor,rowOddColor, rowEvenColor]*100],
                 font=dict(color='black', size=11),
                 align=['left','center'])
-        )])        
+        )])
     fig.update_layout(
         showlegend=False,
+        title_text="Data on Testing for Covid-19 in all",
     )
     return fig
 
@@ -118,7 +119,7 @@ dropdown_scope = dcc.Dropdown(
         placeholder='World'
     )
 
-radio_lin_log_cases = dbc.Checklist(
+checklist_lin_log_cases = dbc.Checklist(
         id='lin_log_cases',
         options=[dict(label='Linear', value=0)],
         value=[0],
@@ -126,7 +127,7 @@ radio_lin_log_cases = dbc.Checklist(
         style={'textAlign': 'center', 'color': '#fff'}
     )
 
-radio_projection = dbc.Checklist(
+checklist_projection = dbc.Checklist(
         id='projection',
         options=[dict(label='Equirectangular', value=0)],
         value=[0],
@@ -144,12 +145,13 @@ dropdown_country_deaths = dcc.Dropdown(
         multi=True
     )
 
-radio_lin_log_deaths = dcc.RadioItems(
+checklist_lin_log_deaths = dbc.Checklist(
         id='lin_log_deaths',
-        options=[dict(label='Linear', value=0), dict(label='Log', value=1)],
-        value=0,
-        style={'textAlign': 'center'}
-    )
+        options=[dict(label='Linear', value=0)],
+        value=[0],
+        switch=True,
+        style={'textAlign': 'center', 'color': '#fff'}
+    ) 
 
 deaths_options_names = ['new_deaths_per_million', 'new_deaths_smoothed_per_million']
 deaths_options = [dict(label=deaths.replace('_', ' '), value=deaths) for deaths in deaths_options_names]
@@ -166,12 +168,12 @@ dropdown_scope2 = dcc.Dropdown(
         placeholder='World'
     )
 
-radio_projection2 = dcc.RadioItems(
+checklist_projection2 = dbc.Checklist(
         id='projection2',
-        options=[dict(label='Equirectangular', value=0),
-                 dict(label='Orthographic', value=1)],
-        value=0,
-        style={'textAlign': 'center', 'margin': '10px'}
+        options=[dict(label='Equirectangular', value=0)],
+        value=[0],
+        switch=True,
+        style={'textAlign': 'center', 'color': '#fff'}
     )
 
 
@@ -243,9 +245,9 @@ choose_tab = dcc.Tabs([
                     html.Br(),html.Br(),
                     html.H5('Which Projection?', style={'textAlign': 'center', 'color': colors["text"]}),
                     dbc.Row([
-                        html.P('Orthographic', style={'paddingLeft': '70px', 'paddingRight': '5px', 'color': '#fff'}),
-                        radio_projection
-                    ], style={'align': 'center'})#TODO
+                        html.P('Orthographic', style={'paddingLeft': '80px', 'paddingRight': '8px', 'color': '#fff'}),
+                        checklist_projection
+                    ])
                 ], style={'width': '30%'}, className='slicerblue'),
             
                 html.Div([
@@ -264,8 +266,8 @@ choose_tab = dcc.Tabs([
                     html.Br(),html.Br(),
                     dbc.Row([
                         html.P('Log', style={'paddingLeft': '150px', 'paddingRight': '8px', 'color': '#fff'}),
-                        radio_lin_log_cases
-                    ], style={'align': 'center'})#TODO
+                        checklist_lin_log_cases
+                    ])
                 ], style={'width': '30%'}, className='slicerblue')
             ], style={'display': 'flex'})
         ]),
@@ -287,80 +289,43 @@ choose_tab = dcc.Tabs([
                             dropdown_scope2,
                             html.Br(),html.Br(),
                             dbc.Row([
-                                html.P('Log', style={'paddingLeft': '150px', 'paddingRight': '8px', 'color': '#fff'}),
-                                radio_projection2
-                            ], style={'align': 'center'})
+                                html.P('Orthographic', style={'paddingLeft': '80px', 'paddingRight': '8px', 'color': '#fff'}),
+                                checklist_projection2
+                            ])
                         ], style={'width': '30%'}, className='slicerblue')
-                    ], style={'display': 'flex'}),
-                    
-                    html.Div([
-                        html.Div([
-                            html.H5('Which Projection?', style={'textAlign': 'center', 'color': colors["text"]}),
-                            #radio_projection2,
-                            html.Br(),
-                            html.H5('Continent Choice', style={'textAlign': 'center', 'color': colors["text"]}),
-                            #dropdown_scope2,
-                            html.Br(),
-                            html.H3('Total Covid-19 Deaths', style={'textAlign': 'center', 'color': colors["text"]}),
-                            dbc.Card(
-                                #dcc.Graph(id='total_deaths_graph'), body=True
-                            )
-                        ], style={'width': '100%', 'heigh': '1000px'}, className='slicerblue')
-                    ], style={'display': 'flex'}),
+                    ], style={'display': 'flex'})
                 ]),
                 dcc.Tab(label='Pie Chart', children=[
-                    dbc.Card(
-                        dcc.Graph(figure=total_deaths()), body=True
-                    )
+                    html.Div([
+                        html.Div([
+                            dcc.Graph(figure=total_deaths())
+                        ], style={'width': '100%', 'height': '480px'}, className='slicerblue')
+                    ], style={'display': 'flex'})
                 ])
             ]),
-
-            html.Br(),html.Br(),
-            html.H5('Which Projection?', style={'textAlign': 'center', 'color': colors["text"]}),
-            dbc.Row([
-                html.P('Orthographic', style={'paddingLeft': '70px', 'paddingRight': '5px', 'color': '#fff'}),
-                #radio_projection
-            ], style={'align': 'center'}),#TODO
+            html.Br(),
 
             html.Div([
                 html.Div([
-                    #dcc.Graph(id='new_cases_graph')
-                ], style={'width': '70%'}, className='graphblue'),
-                html.Div([
-                    html.Br(),html.Br(),
-                    html.H5('Country Choice', style={'textAlign': 'center', 'color': colors["text"]}),
-                    #dropdown_country_cases,
-                    html.Br(),html.Br(),
-                    dbc.Row([
-                        html.P('Log', style={'paddingLeft': '150px', 'paddingRight': '8px', 'color': '#fff'}),
-                        #radio_lin_log_cases
-                    ], style={'align': 'center'})#TODO
-                ], style={'width': '30%'}, className='slicerblue')
-            ], style={'display': 'flex'}),
-
-            dbc.Row([            
-                dbc.Col([
-                    html.H3('Total Covid-19 Deaths', style={'textAlign': 'center', 'color': colors["text"]}),
-                    html.Br(),html.Br(),
-                    
-                ], width=6),
-                
-                dbc.Col([
-                    html.H3('New Covid-19 Deaths', style={'textAlign': 'center', 'color': colors["text"]}),
+                    html.Br(),
                     html.H5('Country Choice', style={'textAlign': 'center', 'color': colors["text"]}),
                     dropdown_country_deaths,
                     html.Br(),
-                    html.H5('Deaths Choice', style={'textAlign': 'center', 'color': colors["text"]}),
+                    html.H5('Options', style={'textAlign': 'center', 'color': colors["text"]}),
                     dropdown_deaths,
                     html.Br(),
-                    html.H5('Linear or Log?', style={'textAlign': 'center', 'color': colors["text"]}),
-                    radio_lin_log_deaths,
-                    dbc.Card(
-                        dcc.Graph(id='new_deaths_graph'), body=True
-                    )
-                ], width=6),
-            ])
+                    dbc.Row([
+                        html.P('Log', style={'paddingLeft': '150px', 'paddingRight': '8px', 'color': '#fff'}),
+                        checklist_lin_log_deaths
+                    ])
+                ], style={'width': '30%'}, className='slicerblue'),
+                html.Div([
+                    dcc.Graph(id='new_deaths_graph')
+                ], style={'width': '70%'}, className='graphblue')
+            ], style={'display': 'flex'})
         ]),
+
+        # Tests
         dcc.Tab(label='Tests', children=[
             html.Br(),html.Br(),
 
@@ -569,7 +534,10 @@ def new_deaths(countries, scale, death):
         y_hist = df_hist[death]
         data_hist.append(dict(type='histogram', x=x_hist, y=y_hist, name=country))
 
-    layout_hist = dict(yaxis=dict(title=death, type=['linear', 'log'][scale]))
+    if len(scale):
+        layout_hist = dict(yaxis=dict(title=death, type=['linear', 'log'][0]))
+    else:
+        layout_hist = dict(yaxis=dict(title=death, type=['linear', 'log'][1]))
 
     return go.Figure(data=data_hist, layout=layout_hist)
 
@@ -578,16 +546,26 @@ def new_deaths(countries, scale, death):
     [Input("projection2", "value"), Input("scope_continent2", "value")]
 )
 def total_deaths(projection, scope):
-    fig = px.choropleth(df, 
-        locations = 'iso_code',
-        hover_name='location',
-        color="total_deaths",
-        animation_frame="date",
-        color_continuous_scale="amp",
-        scope = scope.lower(),
-        projection=['equirectangular', 'orthographic'][projection],
-        height=700)
-
+    if len(projection):
+        fig = px.choropleth(df, 
+            locations = 'iso_code',
+            hover_name='location',
+            color="total_deaths",
+            animation_frame="date",
+            color_continuous_scale="amp",
+            scope = scope.lower(),
+            projection=['equirectangular', 'orthographic'][0],
+            height=700)
+    else:
+        fig = px.choropleth(df, 
+            locations = 'iso_code',
+            hover_name='location',
+            color="total_deaths",
+            animation_frame="date",
+            color_continuous_scale="amp",
+            scope = scope.lower(),
+            projection=['equirectangular', 'orthographic'][1],
+            height=700)
     return fig
 
 
