@@ -71,7 +71,7 @@ dropdown_continent_cases = dcc.Dropdown(
 dropdown_country_cases = dcc.Dropdown(
     id='country_drop_cases',
     options=country_options,
-    value=['Portugal'],
+    value=['Portugal', 'France', 'United States'],
     multi=True,
     placeholder='Select a country'
 )
@@ -232,7 +232,7 @@ radio_lin_log_vac = dbc.RadioItems(
     )
 
 
-# Components
+####### Components
 choose_tab = dcc.Tabs([
         dcc.Tab(label='Cases', children=[
             html.Br(),html.Br(),
@@ -363,7 +363,9 @@ choose_tab = dcc.Tabs([
                 ], style={'width': '70%'}, className='graphblue')
             ], style={'display': 'flex'})
         ])
-], className='classTabs')
+    ]
+)
+
 
 # Navbar
 nav_home = dbc.NavItem(dbc.NavLink("Informations about Covid-19", href="/", active="exact"), style={'align': 'right'})
@@ -509,7 +511,8 @@ def new_deaths(countries, scale, death):
         y_sc = df_sc[death]
         data_sc.append(dict(type='scatter', x=x_sc, y=y_sc, name=country, mode='lines'))
 
-    layout_sc = dict(yaxis=dict(title=death.replace('_', ' '), type=['linear', 'log'][scale]))
+    layout_sc = dict(yaxis=dict(title=death.replace('_', ' '), type=['linear', 'log'][scale]),
+        title=dict(text=death.replace('_', ' ').capitalize()))
 
     return go.Figure(data=data_sc, layout=layout_sc)
 
