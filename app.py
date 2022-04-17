@@ -197,9 +197,22 @@ dropdown_tests = dcc.Dropdown(
         value='total_tests_per_thousand'
     )
 
-choose_plot = dbc.RadioItems(
-        id='plot_option',
-        options=[dict(label='Bar Chart', value=0), dict(label='World Map', value=1)],
+dropdown_tests2 = dcc.Dropdown(
+        id='tests_option2',
+        options=tests_options,
+        value='total_tests_per_thousand'
+    )
+
+dropdown_scope3 = dcc.Dropdown(
+        id='scope_continent3',
+        options=continent_options2,
+        value='world',
+        placeholder='World'
+    )
+
+radio_projection3 = dbc.RadioItems(
+        id='projection3',
+        options=[dict(label='Equirectangular', value=0), dict(label='Orthographic', value=1)],
         value=0,
         switch=True,
         style={'textAlign': 'center', 'color': '#fff'}
@@ -282,6 +295,7 @@ choose_tab = dcc.Tabs([
                             html.H5('Continent Choice', style={'textAlign': 'center', 'color': colors["text"]}),
                             dropdown_scope2,
                             html.Br(),html.Br(),
+                            html.H5('Which Projection?', style={'textAlign': 'center', 'color': colors["text"]}),
                             radio_projection2
                         ], style={'width': '30%'}, className='slicerblue')
                     ], style={'display': 'flex'})
@@ -322,19 +336,42 @@ choose_tab = dcc.Tabs([
                     table
                 ], style={'width': '100%', 'height': '440px'}, className='slicerblue'),
             ], style={'display': 'flex'}),
+            html.Br(),html.Br(),
 
-            html.Div([
-                html.Div([
+            dcc.Tabs([
+                dcc.Tab(label='World Map', children=[
                     html.Br(),html.Br(),
-                    html.H5('Options to visualize', style={'textAlign': 'center', 'color': colors["text"]}),
-                    dropdown_tests,
+                    html.Div([
+                        html.Div([
+                            dcc.Graph(id='world_map_tests')
+                        ], style={'width': '70%'}, className='graphblue'),
+                        html.Div([
+                            html.Br(),
+                            html.H5('Options to visualize', style={'textAlign': 'center', 'color': colors["text"]}),
+                            dropdown_tests,
+                            html.Br(),
+                            html.H5('Continent Choice', style={'textAlign': 'center', 'color': colors["text"]}),
+                            dropdown_scope3,
+                            html.Br(),
+                            html.H5('Which Projection?', style={'textAlign': 'center', 'color': colors["text"]}),
+                            radio_projection3
+                        ], style={'width': '30%'}, className='slicerblue')
+                    ], style={'display': 'flex'})
+                ]),
+                dcc.Tab(label='Bar Chart', children=[
                     html.Br(),html.Br(),
-                    choose_plot
-                ], style={'width': '30%'}, className='slicerblue'),
-                html.Div([
-                    dcc.Graph(id='tests_graph')
-                ], style={'width': '70%'}, className='graphblue'),
-            ], style={'display': 'flex'})
+                    html.Div([
+                        html.Div([
+                            html.Br(),html.Br(),
+                            html.H5('Options to visualize', style={'textAlign': 'center', 'color': colors["text"]}),
+                            dropdown_tests2
+                        ], style={'width': '30%'}, className='slicerblue'),
+                        html.Div([
+                            dcc.Graph(id='bar_tests')
+                        ], style={'width': '100%'}, className='graphblue')
+                    ], style={'display': 'flex'})
+                ])
+            ])
         ]),
 
         # Vaccinations
@@ -535,22 +572,27 @@ def total_deaths(projection, scope):
 
 # Tests
 @app.callback(
-    Output("tests_graph", "figure"),
-    [Input("tests_option", "value"), Input("plot_option", "value")]
+    Output("world_map_tests", "figure"),
+    [Input("scope_continent3", "value"), Input("projection3", "value"), Input("tests_option", "value")]
 )
-def tests_plot(test, plot):
-    if plot == 0:
-        fig = px.bar(df, x="continent", y=test, animation_frame="date", color="continent", hover_name="location")
-    else:
-        fig = px.choropleth(df, 
-            locations = 'iso_code',
-            hover_name='location',
-            color=test, 
-            animation_frame="date",
-            color_continuous_scale=[(0, 'rgba(255,254,230,255)'), (0.5, 'rgba(0,69,40,255)'), (1.0, 'rgb(0,0,0)')],
-            projection="natural earth",
-            height=700)
+def world_plot(scope, projection, test):
+    fig = px.choropleth(df,
+        locations = 'iso_code',
+        hover_name='location',
+        color=test, 
+        animation_frame="date",
+        scope = scope.lower(),
+        projection=['equirectangular', 'orthographic'][projection],
+        color_continuous_scale=[(0, 'rgba(255,254,230,255)'), (0.5, 'rgba(0,69,40,255)'), (1.0, 'rgb(0,0,0)')],
+        height=700)
     return fig
+
+@app.callback(
+    Output("bar_tests", "figure"),
+    [Input("tests_option2", "value")]
+)
+def bar_plot(test):
+    return px.bar(df, x="continent", y=test, animation_frame="date", color="continent", hover_name="location")
 
 
 # Vaccinations
